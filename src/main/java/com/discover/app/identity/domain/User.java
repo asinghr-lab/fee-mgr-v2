@@ -5,8 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users", uniqueConstraints =
-    @UniqueConstraint(name = "uk_users_username", columnNames = "username"))
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "username"))
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,5 +28,13 @@ public class User {
     public String getPassword() { return password; }
     public boolean isEnabled() { return enabled; }
     public Set<UserRole> getUserRoles() { return userRoles; }
-    public void addRole(Role role) { userRoles.add(new UserRole(this, role)); }
+    public void setPassword(String password) { this.password = password; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public void addRole(Role role) {
+        if (userRoles.stream().noneMatch(r -> r.getRole() == role)) userRoles.add(new UserRole(this, role));
+    }
+    public void replaceRoles(Role role) {
+        userRoles.clear();
+        addRole(role);
+    }
 }

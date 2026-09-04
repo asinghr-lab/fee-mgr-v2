@@ -9,23 +9,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class IdentityDataInitializer {
-	@Bean
-	CommandLineRunner initializeIdentity(UserRepository users, UserProfileRepository profiles,
-			PasswordEncoder encoder) {
-		return args -> {
-			if (users.findByUsername("admin").isEmpty()) {
-				User u = new User("admin", encoder.encode("admin123"), true);
-				u.addRole(Role.ADMIN);
-				u.addRole(Role.STAFF);
-				users.save(u);
-				profiles.save(new UserProfile(u, "Administrator"));
-			}
-			if (users.findByUsername("staff").isEmpty()) {
-				User u = new User("staff", encoder.encode("staff123"), true);
-				u.addRole(Role.STAFF);
-				users.save(u);
-				profiles.save(new UserProfile(u, "Staff User"));
-			}
-		};
-	}
+    @Bean
+    CommandLineRunner initializeIdentity(UserRepository users, UserProfileRepository profiles,
+                                          PasswordEncoder encoder) {
+        return args -> {
+            if (users.findByUsername("admin").isEmpty()) {
+                User u = new User("admin", encoder.encode("admin123"), true);
+                u.addRole(Role.ADMIN); u.addRole(Role.STAFF);
+                users.save(u); profiles.save(new UserProfile(u, "Administrator"));
+            }
+            if (users.findByUsername("staff").isEmpty()) {
+                User u = new User("staff", encoder.encode("staff123"), true);
+                u.addRole(Role.STAFF);
+                users.save(u); profiles.save(new UserProfile(u, "Staff User"));
+            }
+        };
+    }
 }

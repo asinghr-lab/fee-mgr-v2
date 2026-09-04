@@ -13,10 +13,9 @@ public class UserProfile {
     private String displayName;
 
     protected UserProfile() {}
-    public UserProfile(User user, String displayName) {
-        this.user = user; this.displayName = displayName;
-    }
+    public UserProfile(User user, String displayName) { this.user = user; this.displayName = displayName; }
     public Long getId() { return id; }
     public User getUser() { return user; }
     public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 }
