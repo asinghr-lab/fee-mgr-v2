@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+	<div th:fragment="sidebar" class="sidebar-inner">
+		<div class="px-3 pt-4 pb-2 sidebar-label">MAIN</div>
+		<nav class="nav flex-column px-2 gap-1"><a class="nav-link sidebar-link" th:href="@{/}"><i
+					class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></nav>
+		<div class="px-3 pt-4 pb-2 sidebar-label">SCHOOL</div>
+		<nav class="nav flex-column px-2 gap-1"><a class="nav-link sidebar-link" th:href="@{/school}"><i
+					class="bi bi-building-fill"></i><span>School</span></a><a class="nav-link sidebar-link"
+				th:href="@{/school/students}"><i class="bi bi-people-fill"></i><span>Students</span></a></nav>
+		<div class="px-3 pt-4 pb-2 sidebar-label" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">APPROVAL
+		</div>
+		<nav class="nav flex-column px-2 gap-1" th:if="${#authorization.expression('hasRole(''ADMIN'')')}"><a
+				class="nav-link sidebar-link" th:href="@{/school/enrollments/requests}"><i
+					class="bi bi-check2-square"></i><span>Enrollment Requests</span></a><a class="nav-link sidebar-link"
+				th:href="@{/school/enrollments/history}"><i class="bi bi-clock-history"></i><span>Historical
+					Requests</span></a><span class="nav-link sidebar-link disabled"><i
+					class="bi bi-percent"></i><span>Discount Requests</span><small
+					class="ms-auto badge text-bg-light">Later</small></span><span
+				class="nav-link sidebar-link disabled"><i class="bi bi-file-earmark-x"></i><span>Invoice
+					Cancellations</span><small class="ms-auto badge text-bg-light">Later</small></span></nav>
+		<div class="sidebar-footer mt-auto p-3">
+			<div class="sidebar-tip"><i class="bi bi-shield-check me-2"></i>Role-based access is enabled.</div>
+		</div>
+	</div>
+</body>
+
+</html>

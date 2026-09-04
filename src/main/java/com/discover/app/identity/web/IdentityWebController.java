@@ -7,14 +7,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class IdentityWebController {
-	@GetMapping("/login")
-	public String login() {
-		return "identity/login";
-	}
+    @GetMapping("/login")
+    public String login() { return "identity/login"; }
 
-	@GetMapping("/")
-	public String home(Model model, Authentication authentication) {
-		model.addAttribute("username", authentication.getName());
-		return "home";
-	}
+    @GetMapping("/")
+    public String home(Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        return "home";
+    }
 }
