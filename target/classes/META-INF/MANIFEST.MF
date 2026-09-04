@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Java-Version: 17
+Build-Jdk-Spec: 25
+Implementation-Title: school-fee-management
+Implementation-Version: 1.0.0-SNAPSHOT
+Created-By: Maven Integration for Eclipse
+

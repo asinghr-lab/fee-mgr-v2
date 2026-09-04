@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>School Fee Management</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+	<nav class="navbar navbar-dark bg-dark">
+		<div class="container-fluid">
+			<span class="navbar-brand">School Fee Management</span>
+			<form th:action="@{/logout}" method="post"><button class="btn btn-outline-light btn-sm">Logout</button>
+			</form>
+		</div>
+	</nav>
+	<main class="container mt-4">
+		<h3>Phase 1 Foundation</h3>
+		<p>Identity module is active.</p>
+		<p>Logged in as: <strong th:text="${username}">user</strong></p>
+	</main>
+</body>
+
+</html>
