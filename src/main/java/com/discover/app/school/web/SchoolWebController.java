@@ -84,7 +84,7 @@ public class SchoolWebController {
     @GetMapping("/grades/new")
     @PreAuthorize("hasRole('ADMIN')")
     public String gradeForm(Model model) {
-        model.addAttribute("request", new GradeRequest("", 1));
+        model.addAttribute("request", new GradeRequest("","","", 1));
         model.addAttribute("pageTitle", "New Grade");
         return "school/grade-form";
     }
@@ -95,7 +95,7 @@ public class SchoolWebController {
                               BindingResult bindingResult, RedirectAttributes redirect) {
         if (bindingResult.hasErrors()) return "school/grade-form";
         try {
-            grades.create(request.name(), request.displayOrder());
+            grades.create(request.name(),request.section(),request.description(), request.displayOrder());
             redirect.addFlashAttribute("message", "Grade created successfully.");
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirect.addFlashAttribute("error", ex.getMessage());
@@ -108,7 +108,7 @@ public class SchoolWebController {
     public String editGrade(@PathVariable Long id, Model model) {
         var grade = grades.findById(id);
         model.addAttribute("gradeId", grade.getId());
-        model.addAttribute("request", new GradeRequest(grade.getName(), grade.getDisplayOrder()));
+        model.addAttribute("request", new GradeRequest(grade.getName(), grade.getSection(), grade.getDescription(), grade.getDisplayOrder()));
         model.addAttribute("pageTitle", "Edit Grade");
         return "school/grade-form";
     }

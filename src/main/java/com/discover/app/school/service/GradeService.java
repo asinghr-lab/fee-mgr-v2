@@ -28,10 +28,10 @@ public class GradeService {
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@Transactional
-	public Grade create(String name, Integer order) {
+	public Grade create(String name, String section, String description, Integer order) {
 		School s = schools.findAll().stream().findFirst()
 				.orElseThrow(() -> new IllegalStateException("School is not configured"));
-		return grades.save(new Grade(s, name, order));
+		return grades.save(new Grade(s, name, section, description, order));
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")

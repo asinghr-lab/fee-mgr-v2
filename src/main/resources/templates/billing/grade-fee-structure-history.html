@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/base}">
+
+<head>
+    <title>Grade Fee Structure History</title>
+</head>
+
+<body>
+    <main layout:fragment="content">
+        <div class="page-header">
+            <div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div>
+            <h1 class="page-title h3 mb-1">Grade Fee Structure History</h1>
+            <p class="text-secondary mb-0">Historical assignments are retained even when a structure is made inactive.
+            </p>
+        </div>
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Grade</th>
+                                <th>Fee Structure</th>
+                                <th>Effective From</th>
+                                <th>Effective To</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="a:${assignments}">
+                                <td th:text="${a.grade.name}"></td>
+                                <td class="fw-semibold" th:text="${a.feeStructure.name}"></td>
+                                <td th:text="${a.effectiveFrom}"></td>
+                                <td th:text="${a.effectiveTo ?: 'Current'}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white"><a class="btn btn-outline-secondary"
+                    th:href="@{/billing/grade-fee-structures}"><i class="bi bi-arrow-left me-1"></i>Back</a></div>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -14,23 +14,26 @@ public class Grade {
 	private School school;
 	@Column(nullable = false, length = 100)
 	private String name;
-	
-	@Column(nullable = false, length = 100)
-	private String gradeCode;
-	
 	@Column(nullable = false, length = 100)
 	private String section;
-	
-	@Column(nullable = false, length = 100)
+	@Column(nullable = true, length = 100)
 	private String description;
-	
-	
-	public String getGradeCode() {
-		return gradeCode;
+	@Column(nullable = false)
+	private Integer displayOrder;
+
+	protected Grade() {
 	}
 
-	public void setGradeCode(String gradeCode) {
-		this.gradeCode = gradeCode;
+	public Grade(School school, String name, String section,  String description,  Integer displayOrder) {
+		this.school = school;
+		this.name = name;
+		this.section = section;
+		this.description = description;
+		this.displayOrder = displayOrder;
+	}
+
+	public Long getId() {
+		return id;
 	}
 
 	public String getSection() {
@@ -47,22 +50,6 @@ public class Grade {
 
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	@Column(nullable = false)
-	private Integer displayOrder;
-
-	protected Grade() {
-	}
-
-	public Grade(School school, String name, Integer displayOrder) {
-		this.school = school;
-		this.name = name;
-		this.displayOrder = displayOrder;
-	}
-
-	public Long getId() {
-		return id;
 	}
 
 	public School getSchool() {

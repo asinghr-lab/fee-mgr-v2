@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/base}">
+
+<head>
+    <title>New Fee Component</title>
+</head>
+
+<body>
+    <main layout:fragment="content">
+        <div class="page-header">
+            <div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div>
+            <h1 class="page-title h3 mb-1">Create Fee Component</h1>
+            <p class="text-secondary mb-0">Components are immutable after creation. To change a concept, deactivate it
+                and create a new component.</p>
+        </div>
+        <div class="card">
+            <div class="card-body p-4">
+                <form th:action="@{/billing/fee-components}" th:object="${request}" method="post" class="row g-3">
+                    <div class="col-12 col-md-8"><label class="form-label fw-semibold">Component Name</label><input
+                            class="form-control" th:field="*{name}" maxlength="120" required>
+                        <div class="text-danger small" th:errors="*{name}"></div>
+                    </div>
+                    <div class="col-12"><a class="btn btn-outline-secondary me-2"
+                            th:href="@{/billing/fee-components}"><i class="bi bi-arrow-left me-1"></i>Cancel</a><button
+                            class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Create Component</button></div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
