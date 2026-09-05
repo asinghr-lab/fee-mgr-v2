@@ -14,9 +14,17 @@
   <div class="px-3 pt-4 pb-2 sidebar-label" sec:authorize="hasRole('ADMIN')">APPROVAL</div>
   <nav class="nav flex-column px-2 gap-1" sec:authorize="hasRole('ADMIN')">
     <a class="nav-link sidebar-link" th:href="@{/school/enrollments/requests}"><i class="bi bi-check2-square"></i><span>Enrollment Requests</span></a>
-    <a class="nav-link sidebar-link" th:href="@{/school/enrollments/history}"><i class="bi bi-clock-history"></i><span>Historical Requests</span></a>
-    <span class="nav-link sidebar-link disabled"><i class="bi bi-percent"></i><span>Discount Requests</span><small class="ms-auto badge text-bg-light">Later</small></span>
-    <span class="nav-link sidebar-link disabled"><i class="bi bi-file-earmark-x"></i><span>Invoice Cancellations</span><small class="ms-auto badge text-bg-light">Later</small></span>
+    <a class="nav-link sidebar-link" th:href="@{/school/enrollments/history}"><i class="bi bi-clock-history"></i><span>Historical Enrollment</span></a>
+    <a class="nav-link sidebar-link" th:href="@{/billing/approval/discount-requests}"><i class="bi bi-percent"></i><span>Discount Requests</span></a>
+    <a class="nav-link sidebar-link" th:href="@{/billing/approval/cancellation-requests}"><i class="bi bi-file-earmark-x"></i><span>Invoice Cancellations</span></a>
+  </nav>
+  <div class="px-3 pt-4 pb-2 sidebar-label">BILLING / FEE CONFIGURATION</div>
+  <nav class="nav flex-column px-2 gap-1">
+    <a class="nav-link sidebar-link" th:href="@{/billing/fee-components}"><i class="bi bi-tags-fill"></i><span>Fee Components</span></a>
+    <a class="nav-link sidebar-link" th:href="@{/billing/fee-structures}"><i class="bi bi-diagram-3-fill"></i><span>Fee Structures</span></a>
+    <a class="nav-link sidebar-link" th:href="@{/billing/grade-fee-structures}"><i class="bi bi-link-45deg"></i><span>Grade Fee Structures</span></a>
+    <a class="nav-link sidebar-link" th:href="@{/billing/generate}"><i class="bi bi-receipt"></i><span>Generate Invoices</span></a>
+    <a class="nav-link sidebar-link" th:href="@{/billing/invoices}"><i class="bi bi-file-earmark-text"></i><span>Invoices</span></a>
   </nav>
   <div class="px-3 pt-4 pb-2 sidebar-label" sec:authorize="hasRole('ADMIN')">ADMINISTRATION</div>
   <nav class="nav flex-column px-2 gap-1" sec:authorize="hasRole('ADMIN')">

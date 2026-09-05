@@ -100,3 +100,53 @@ Open `http://localhost:8080/login`.
 Seed users:
 - admin / admin123
 - staff / staff123
+
+
+
+## Phase 3 — Billing / Fee Configuration
+Implemented:
+- FeeComponent (ACTIVE/INACTIVE, immutable, no amount/frequency)
+- FeeStructure (ACTIVE/INACTIVE, immutable)
+- FeeStructureItem (component + frequency + amount)
+- GradeFeeStructure (historical Grade -> FeeStructure assignment with effective dates)
+- Active-only component/structure selection rules
+- Responsive Thymeleaf/Bootstrap UI
+- DTO-based REST APIs
+
+
+
+
+
+
+# School Fee Management — Phase 4 Billing
+
+Phase 4 builds Billing on the working Phase 3 Fee Configuration baseline.
+
+## Scope
+- System-wide single active Academic Year. Admin can create multiple years; creating/activating one deactivates the others.
+- Billing uses the system-active Academic Year; users do not select an academic year for invoice generation/search.
+- Invoice generation for all approved enrollments or one grade.
+- Fee frequencies: ONE_TIME, YEARLY, HALF_YEARLY, QUARTERLY, MONTHLY.
+- Monthly invoice items use the selected billing month for reporting; other frequencies use invoice generation month for reporting.
+- InvoiceItem historical snapshots: fee component name, frequency, original amount, discount amount, net amount.
+- Issued invoice search by admission number or mobile number.
+- Staff/Admin can request discounts or invoice cancellation.
+- Admin approval workflow for discounts and cancellations.
+- Approved discounts update InvoiceItem discount/net amounts and create Discount facts.
+- Approved cancellation changes Invoice status to CANCELLED.
+- No Payment, PaymentAllocation, partial-payment or advance-payment functionality in Phase 4; those belong to Phase 5.
+
+## UI
+Responsive Bootstrap 5 + Bootstrap Icons + Thymeleaf Layout Dialect.
+
+## Initial invoice generation
+Generation is based on the active GradeFeeStructure assignment. Only ACTIVE FeeStructures can generate new invoices. Historical assignments are retained.
+
+## Build
+Run with JDK 17 and Maven:
+
+    mvn clean test
+    mvn spring-boot:run
+
+Default identity users are inherited from Phase 1.
+

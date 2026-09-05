@@ -67,6 +67,14 @@ public class SchoolWebController {
         return "school/academic-year-form";
     }
 
+    @PostMapping("/academic-years/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String activateAcademicYear(@PathVariable Long id, RedirectAttributes redirect) {
+        try { years.activate(id); redirect.addFlashAttribute("message", "Academic year activated. All other academic years are now inactive."); }
+        catch (RuntimeException ex) { redirect.addFlashAttribute("error", ex.getMessage()); }
+        return "redirect:/school";
+    }
+
     @PostMapping("/academic-years")
     @PreAuthorize("hasRole('ADMIN')")
     public String createAcademicYear(@Valid @ModelAttribute("request") AcademicYearRequest request,
