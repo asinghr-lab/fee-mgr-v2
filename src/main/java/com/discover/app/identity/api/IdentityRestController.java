@@ -19,8 +19,11 @@ public class IdentityRestController {
     private final IdentityAdminService adminService;
 
     public IdentityRestController(UserRepository users, UserProfileRepository profiles,
-                                  IdentityUserService userService, IdentityAdminService adminService) {
-        this.users = users; this.profiles = profiles; this.userService = userService; this.adminService = adminService;
+            IdentityUserService userService, IdentityAdminService adminService) {
+        this.users = users;
+        this.profiles = profiles;
+        this.userService = userService;
+        this.adminService = adminService;
     }
 
     @GetMapping("/me")
@@ -28,7 +31,8 @@ public class IdentityRestController {
         var user = users.findByUsername(authentication.getName()).orElseThrow();
         var profile = profiles.findById(user.getId()).orElse(null);
         return new CurrentUserResponse(user.getUsername(), profile == null ? null : profile.getDisplayName(),
-                user.getUserRoles().stream().map(r -> r.getRole().name()).collect(java.util.stream.Collectors.toUnmodifiableSet()));
+                user.getUserRoles().stream().map(r -> r.getRole().name())
+                        .collect(java.util.stream.Collectors.toUnmodifiableSet()));
     }
 
     @PutMapping("/me/profile")
@@ -43,13 +47,14 @@ public class IdentityRestController {
 
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
-    public org.springframework.data.domain.Page<?> users(@RequestParam(defaultValue="0") int page,
-                                                          @RequestParam(defaultValue="10") int size) {
+    public org.springframework.data.domain.Page<?> users(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         int safeSize = Math.min(Math.max(size, 1), 50);
-        return adminService.findUsers(PageRequest.of(Math.max(page, 0), safeSize)).map(u ->
-                new UserSummary(u.getId(), u.getUsername(), u.isEnabled(),
+        return adminService.findUsers(PageRequest.of(Math.max(page, 0), safeSize))
+                .map(u -> new UserSummary(u.getId(), u.getUsername(), u.isEnabled(),
                         u.getUserRoles().stream().map(r -> r.getRole().name()).toList()));
     }
 
-    public record UserSummary(Long id, String username, boolean enabled, java.util.List<String> roles) {}
+    public record UserSummary(Long id, String username, boolean enabled, java.util.List<String> roles) {
+    }
 }
