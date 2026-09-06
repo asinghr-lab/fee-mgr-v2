@@ -3,6 +3,9 @@ package com.discover.app.school.web;
 import com.discover.app.school.dto.SchoolDtos.*;
 import com.discover.app.school.service.*;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -45,7 +48,7 @@ public class SchoolWebController {
                 s == null ? "" : s.getName(),
                 s == null ? "" : s.getAddress(),
                 s == null ? "" : s.getPhoneNumber(),
-                s == null ? "" : s.getEmail()));
+                s == null ? "" : s.getEmail(), s == null ? 10 : s.getFeeDueDay()));
         model.addAttribute("pageTitle", s == null ? "Create School" : "Edit School");
         return "school/school-form";
     }
@@ -55,7 +58,7 @@ public class SchoolWebController {
     public String saveSchool(@Valid @ModelAttribute("schoolRequest") SchoolRequest request,
                              BindingResult bindingResult, RedirectAttributes redirect) {
         if (bindingResult.hasErrors()) return "school/school-form";
-        school.saveOrUpdate(request.name(), request.address(), request.phoneNumber(), request.email());
+        school.saveOrUpdate(request.name(), request.address(), request.phoneNumber(), request.email(), request.feeDueDay());
         redirect.addFlashAttribute("message", "School details saved successfully.");
         return "redirect:/school";
     }
@@ -138,13 +141,25 @@ public class SchoolWebController {
     @GetMapping("/students")
     public String studentList(Model model) {
         model.addAttribute("students", students.findAll());
+        model.addAttribute("activeEnrollmentStudentIds", enrollments.activeEnrollmentStudentIds());
         return "school/students";
+    }
+
+    @GetMapping("/enrollments")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public String enrollmentList(@RequestParam(defaultValue="0") int page,
+                                 @RequestParam(defaultValue="10") int size, Model model) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(size, 5), 50);
+        Page<?> enrollmentPage = enrollments.findAll(PageRequest.of(safePage, safeSize));
+        model.addAttribute("enrollmentPage", enrollmentPage);
+        return "school/enrollments";
     }
 
     @GetMapping("/students/new")
     @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public String studentForm(Model model) {
-        model.addAttribute("request", new StudentRequest("", "", "", null, "", "", ""));
+        model.addAttribute("request", new StudentRequest("", "", "", null, "", "", "", null));
         return "school/student-form";
     }
 

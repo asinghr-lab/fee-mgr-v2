@@ -48,6 +48,27 @@ public class BillingDataInitializer {
                 structure1.addItem(new FeeStructureItem(component5, FeeFrequency.YEARLY, new BigDecimal("5000.00")));
 
                 structureRepo.save(structure1);
+                
+                var structure2 = new FeeStructure("Grade2-Fees");
+
+                structure2.addItem(new FeeStructureItem(component1, FeeFrequency.MONTHLY, new BigDecimal("2500.00")));
+                structure2.addItem(new FeeStructureItem(component2, FeeFrequency.MONTHLY, new BigDecimal("500.00")));
+                structure2.addItem(new FeeStructureItem(component3, FeeFrequency.QUARTERLY, new BigDecimal("1000.00")));
+                structure2.addItem(new FeeStructureItem(component4, FeeFrequency.MONTHLY, new BigDecimal("1500.00")));
+                structure2.addItem(new FeeStructureItem(component5, FeeFrequency.YEARLY, new BigDecimal("5500.00")));
+
+                structureRepo.save(structure2);
+                
+                var structure3 = new FeeStructure("Grade3-Fees");
+
+                structure3.addItem(new FeeStructureItem(component1, FeeFrequency.MONTHLY, new BigDecimal("3000.00")));
+                structure3.addItem(new FeeStructureItem(component2, FeeFrequency.MONTHLY, new BigDecimal("500.00")));
+                structure3.addItem(new FeeStructureItem(component3, FeeFrequency.QUARTERLY, new BigDecimal("1000.00")));
+                structure3.addItem(new FeeStructureItem(component4, FeeFrequency.MONTHLY, new BigDecimal("1500.00")));
+                structure3.addItem(new FeeStructureItem(component5, FeeFrequency.YEARLY, new BigDecimal("6000.00")));
+
+                structureRepo.save(structure3);
+                
             }
         };
     }

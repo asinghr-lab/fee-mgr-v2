@@ -29,10 +29,12 @@ public class BillingService {
 	private final AcademicYearService years;
 	private final UserRepository users;
 	private final com.discover.app.school.repository.GradeRepository grades;
+	private final com.discover.app.school.service.SchoolService schoolService;
 
 	public BillingService(InvoiceRepository i, DiscountRequestRepository d, DiscountRepository df,
 			CancellationRequestRepository c, GradeFeeStructureRepository a, StudentEnrollmentRepository e,
-			AcademicYearService y, UserRepository u, com.discover.app.school.repository.GradeRepository g) {
+			AcademicYearService y, UserRepository u, com.discover.app.school.repository.GradeRepository g,
+			com.discover.app.school.service.SchoolService ss) {
 		invoices = i;
 		discounts = d;
 		discountFacts = df;
@@ -42,6 +44,7 @@ public class BillingService {
 		years = y;
 		users = u;
 		grades = g;
+		schoolService = ss;
 	}
 
 	@Transactional
@@ -88,7 +91,8 @@ public class BillingService {
 		if (applicable.isEmpty())
 			return false;
 		String number = nextInvoiceNumber(now);
-		Invoice invoice = new Invoice(number, enrollment, year, billingMonth, now);
+		Invoice invoice = new Invoice(number, enrollment, year, billingMonth, now,
+				calculateDueDate(applicable, billingMonth, now));
 		applicable.forEach(item -> invoice
 				.addItem(new InvoiceItem(item.getFeeComponent(), item.getFrequency(), item.getAmount())));
 		invoices.save(invoice);
@@ -242,10 +246,21 @@ public class BillingService {
 				i.getStudentEnrollment().getStudent().getFullName(),
 				i.getStudentEnrollment().getStudent().getAdmissionNumber(),
 				i.getStudentEnrollment().getGrade().getName(), i.getAcademicYear().getName(), i.getBillingMonth(),
-				i.getGenerationDate(), i.getStatus(), i.getOriginalAmount(), i.getDiscountAmount(), i.getNetAmount(), i
+				i.getGenerationDate(), i.getStatus(), i.getDueDate(), i.getOriginalAmount(), i.getDiscountAmount(),
+				i.getNetAmount(), i
 						.getItems().stream().map(x -> new InvoiceItemResponse(x.getId(), x.getFeeComponentName(),
 								x.getFrequency(), x.getOriginalAmount(), x.getDiscountAmount(), x.getNetAmount()))
 						.toList());
+	}
+
+	private LocalDate calculateDueDate(List<FeeStructureItem> items, LocalDate billingMonth, LocalDateTime now) {
+		boolean monthly = items.stream().anyMatch(x -> x.getFrequency() == FeeFrequency.MONTHLY);
+		if (monthly) {
+			var school = schoolService.getSchool();
+			int day = school == null ? 10 : school.getFeeDueDay();
+			return billingMonth.withDayOfMonth(Math.min(day, billingMonth.lengthOfMonth()));
+		}
+		return now.toLocalDate();
 	}
 
 	private void ensureIssued(Invoice i) {

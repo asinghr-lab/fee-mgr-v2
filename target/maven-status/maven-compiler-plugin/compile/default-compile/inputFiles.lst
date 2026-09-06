@@ -29,6 +29,13 @@ D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\billing\service\BillingDat
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\billing\service\BillingService.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\billing\service\FeeConfigurationService.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\billing\web\BillingWebController.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\api\CollectionRestController.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\domain\Payment.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\domain\PaymentStatus.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\dto\CollectionDtos.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\repository\PaymentRepository.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\service\CollectionService.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\collection\web\CollectionWebController.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\config\SecurityConfig.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\identity\api\IdentityRestController.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\identity\domain\Role.java
@@ -43,6 +50,11 @@ D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\identity\service\IdentityD
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\identity\service\IdentityUserDetailsService.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\identity\service\IdentityUserService.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\identity\web\IdentityWebController.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\reporting\api\ReportingRestController.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\reporting\dto\ReportingDtos.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\reporting\repository\ReportingRepository.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\reporting\service\ReportingService.java
+D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\reporting\web\ReportingWebController.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\school\api\SchoolRestController.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\school\domain\AcademicYear.java
 D:\git-repo\fee-mgr-v2\src\main\java\com\discover\app\school\domain\EnrollmentStatus.java

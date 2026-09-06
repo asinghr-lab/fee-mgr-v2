@@ -23,6 +23,7 @@ import java.util.List;
 public class BillingWebController {
 	private final BillingService service;
 	private final AcademicYearService years;
+
 	private final FeeConfigurationService feeService;
 
 	public BillingWebController(BillingService service, AcademicYearService years, FeeConfigurationService feeService) {

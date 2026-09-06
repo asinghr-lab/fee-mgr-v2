@@ -1,6 +1,13 @@
 package com.discover.app.school.service;
-import com.discover.app.school.domain.Student; import com.discover.app.school.repository.StudentRepository;
-import org.springframework.security.access.prepost.PreAuthorize; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional; import java.time.LocalDate; import java.util.List;
+
+import com.discover.app.school.domain.Student;
+import com.discover.app.school.repository.StudentRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.util.List;
+
 @Service public class StudentService {
  private final StudentRepository repository; public StudentService(StudentRepository repository){this.repository=repository;}
  @Transactional(readOnly=true) public List<Student> findAll(){return repository.findAllByOrderByAdmissionNumberAsc();}
