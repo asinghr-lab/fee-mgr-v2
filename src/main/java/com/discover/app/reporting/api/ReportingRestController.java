@@ -1,1 +1,65 @@
-package com.discover.app.reporting.api; import com.discover.app.reporting.service.ReportingService; import org.springframework.security.access.prepost.PreAuthorize; import org.springframework.web.bind.annotation.*; @RestController @RequestMapping("/api/reporting") @PreAuthorize("hasAnyRole('ADMIN','STAFF')") public class ReportingRestController{private final ReportingService s; public ReportingRestController(ReportingService s){this.s=s;} @GetMapping("/monthly") public Object monthly(@RequestParam int month,@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.monthlyGrades(month,page,size);} @GetMapping("/yearly") public Object yearly(@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.yearlyGrades(page,size);} @GetMapping("/yearly/grade/{id}") public Object grade(@PathVariable Long id,@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.yearlyStudents(id,page,size);} @GetMapping("/students/{id}") public Object student(@PathVariable Long id){return s.student(id);} @GetMapping("/admissions/new") public Object newAdmissions(@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.newAdmissions(page,size);} @GetMapping("/admissions/last-month") public Object lastMonth(@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.admissionsLastMonth(page,size);} @GetMapping("/promotions") public Object promotions(@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.promotions(page,size);} @GetMapping("/pending-fee") public Object pending(@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.pending(page,size);} @GetMapping("/repeat-late") public Object repeat(@RequestParam(defaultValue="1")int minimum,@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="20")int size){return s.repeatLate(minimum,page,size);} }
+package com.discover.app.reporting.api;
+
+import com.discover.app.reporting.service.ReportingService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/reporting")
+@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+public class ReportingRestController {
+	private final ReportingService s;
+
+	public ReportingRestController(ReportingService s) {
+		this.s = s;
+	}
+
+	@GetMapping("/monthly")
+	public Object monthly(@RequestParam int month, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		return s.monthlyGrades(month, page, size);
+	}
+
+	@GetMapping("/yearly")
+	public Object yearly(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		return s.yearlyGrades(page, size);
+	}
+
+	@GetMapping("/yearly/grade/{id}")
+	public Object grade(@PathVariable Long id, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		return s.yearlyStudents(id, page, size);
+	}
+
+	@GetMapping("/students/{id}")
+	public Object student(@PathVariable Long id) {
+		return s.student(id);
+	}
+
+	@GetMapping("/admissions/new")
+	public Object newAdmissions(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		return s.newAdmissions(page, size);
+	}
+
+	@GetMapping("/admissions/last-month")
+	public Object lastMonth(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		return s.admissionsLastMonth(page, size);
+	}
+
+	@GetMapping("/promotions")
+	public Object promotions(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		return s.promotions(page, size);
+	}
+
+	@GetMapping("/pending-fee")
+	public Object pending(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		return s.pending(page, size);
+	}
+
+	@GetMapping("/repeat-late")
+	public Object repeat(@RequestParam(defaultValue = "1") int minimum, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		return s.repeatLate(minimum, page, size);
+	}
+}

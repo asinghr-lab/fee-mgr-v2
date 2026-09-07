@@ -1,1 +1,39 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><head><title>Academic Year</title></head><body><section layout:fragment="content"><div class="page-header"><div class="text-uppercase small text-primary fw-bold">School</div><h1 class="page-title h3">Create Academic Year</h1><p class="text-muted">Creating a new year makes it the single active system academic year.</p></div><div class="card"><div class="card-body"><form th:action="@{/school/academic-years}" th:object="${request}" method="post" class="row g-3"><div class="col-md-6"><label class="form-label">Name</label><input class="form-control" th:field="*{name}" placeholder="2026-2027"><div class="text-danger small" th:errors="*{name}"></div></div><div class="col-md-3"><label class="form-label">Start Date</label><input class="form-control" type="date" th:field="*{startDate}"><div class="text-danger small" th:errors="*{startDate}"></div></div><div class="col-md-3"><label class="form-label">End Date</label><input class="form-control" type="date" th:field="*{endDate}"><div class="text-danger small" th:errors="*{endDate}"></div></div><div class="col-12"><button class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Create & Activate</button> <a class="btn btn-outline-secondary" th:href="@{/school}">Cancel</a></div></form></div></div></section></body></html>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<head>
+	<title>Academic Year</title>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="page-header">
+			<div class="text-uppercase small text-primary fw-bold">School</div>
+			<h1 class="page-title h3">Create Academic Year</h1>
+			<p class="text-muted">Creating a new year makes it the single active system academic year.</p>
+		</div>
+		<div class="card">
+			<div class="card-body">
+				<form th:action="@{/school/academic-years}" th:object="${request}" method="post" class="row g-3">
+					<div class="col-md-6"><label class="form-label">Name</label><input class="form-control"
+							th:field="*{name}" placeholder="2026-2027">
+						<div class="text-danger small" th:errors="*{name}"></div>
+					</div>
+					<div class="col-md-3"><label class="form-label">Start Date</label><input class="form-control"
+							type="date" th:field="*{startDate}">
+						<div class="text-danger small" th:errors="*{startDate}"></div>
+					</div>
+					<div class="col-md-3"><label class="form-label">End Date</label><input class="form-control"
+							type="date" th:field="*{endDate}">
+						<div class="text-danger small" th:errors="*{endDate}"></div>
+					</div>
+					<div class="col-12"><button class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Create &
+							Activate</button> <a class="btn btn-outline-secondary" th:href="@{/school}">Cancel</a></div>
+				</form>
+			</div>
+		</div>
+	</section>
+</body>
+
+</html>

@@ -1,1 +1,65 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><head><title>Invoice Cancellation Requests</title></head><body><section layout:fragment="content"><div class="page-header d-flex justify-content-between align-items-center"><div><div class="text-uppercase small text-primary fw-bold">Approval</div><h1 class="page-title h3">Invoice Cancellation Requests</h1><p class="text-muted mb-0" th:text="${historical?'Historical decisions':'Requests awaiting approval'}"></p></div><a class="btn btn-outline-secondary" th:href="${historical?'/billing/approval/cancellation-requests':'/billing/approval/cancellation-requests/history'}" th:text="${historical?'Active Requests':'History'}"></a></div><div th:if="${message}" class="alert alert-success"><span th:text="${message}"></span></div><div th:if="${error}" class="alert alert-danger"><span th:text="${error}"></span></div><div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Invoice</th><th>Student</th><th>Requested By</th><th>Created</th><th>Reason</th><th>Status</th><th th:if="${!historical}">Action</th></tr></thead><tbody><tr th:each="r:${requests}"><td><a th:href="@{'/billing/invoices/' + ${r.invoice.id}}" th:text="${r.invoice.invoiceNumber}"></a></td><td th:text="${r.invoice.studentEnrollment.student.fullName}"></td><td th:text="${r.requestedBy.username}"></td><td th:text="${#temporals.format(r.createdAt,'dd MMM yyyy HH:mm')}"></td><td th:text="${r.reason}"></td><td><span class="badge text-bg-warning" th:text="${r.status}"></span></td><td th:if="${!historical}"><form th:action="@{'/billing/approval/cancellation-requests/' + ${r.id} + '/approve'}" method="post" class="d-inline"><button class="btn btn-sm btn-danger">Approve</button></form> <form th:action="@{'/billing/approval/cancellation-requests/' + ${r.id} + '/reject'}" method="post" class="d-inline"><button class="btn btn-sm btn-outline-secondary">Reject</button></form></td></tr><tr th:if="${#lists.isEmpty(requests)}"><td colspan="7" class="text-center text-muted py-5">No requests found.</td></tr></tbody></table></div></div></section></body></html>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<head>
+	<title>Invoice Cancellation Requests</title>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="page-header d-flex justify-content-between align-items-center">
+			<div>
+				<div class="text-uppercase small text-primary fw-bold">Approval</div>
+				<h1 class="page-title h3">Invoice Cancellation Requests</h1>
+				<p class="text-muted mb-0" th:text="${historical?'Historical decisions':'Requests awaiting approval'}">
+				</p>
+			</div><a class="btn btn-outline-secondary"
+				th:href="${historical?'/billing/approval/cancellation-requests':'/billing/approval/cancellation-requests/history'}"
+				th:text="${historical?'Active Requests':'History'}"></a>
+		</div>
+		<div th:if="${message}" class="alert alert-success"><span th:text="${message}"></span></div>
+		<div th:if="${error}" class="alert alert-danger"><span th:text="${error}"></span></div>
+		<div class="card">
+			<div class="table-responsive">
+				<table class="table table-hover align-middle mb-0">
+					<thead>
+						<tr>
+							<th>Invoice</th>
+							<th>Student</th>
+							<th>Requested By</th>
+							<th>Created</th>
+							<th>Reason</th>
+							<th>Status</th>
+							<th th:if="${!historical}">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="r:${requests}">
+							<td><a th:href="@{'/billing/invoices/' + ${r.invoice.id}}"
+									th:text="${r.invoice.invoiceNumber}"></a></td>
+							<td th:text="${r.invoice.studentEnrollment.student.fullName}"></td>
+							<td th:text="${r.requestedBy.username}"></td>
+							<td th:text="${#temporals.format(r.createdAt,'dd MMM yyyy HH:mm')}"></td>
+							<td th:text="${r.reason}"></td>
+							<td><span class="badge text-bg-warning" th:text="${r.status}"></span></td>
+							<td th:if="${!historical}">
+								<form th:action="@{'/billing/approval/cancellation-requests/' + ${r.id} + '/approve'}"
+									method="post" class="d-inline"><button
+										class="btn btn-sm btn-danger">Approve</button></form>
+								<form th:action="@{'/billing/approval/cancellation-requests/' + ${r.id} + '/reject'}"
+									method="post" class="d-inline"><button
+										class="btn btn-sm btn-outline-secondary">Reject</button></form>
+							</td>
+						</tr>
+						<tr th:if="${#lists.isEmpty(requests)}">
+							<td colspan="7" class="text-center text-muted py-5">No requests found.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+</body>
+
+</html>

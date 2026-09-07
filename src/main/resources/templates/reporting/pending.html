@@ -1,1 +1,34 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><body><section layout:fragment="content"><h1 class="page-title h3">Pending Fee</h1><p class="text-muted">Academic Year: <b th:text="${year.name}"></b></p><div class="table-responsive card"><table class="table table-hover mb-0"><thead><tr><th>Student</th><th>Admission No.</th><th>Grade</th><th>Pending Due</th><th>Due Date</th></tr></thead><tbody><tr th:each="r:${rows.content}"><td th:text="${r.studentName}"></td><td th:text="${r.admissionNumber}"></td><td th:text="${r.gradeName}"></td><td th:text="${r.due}"></td><td th:text="${r.dueDate}"></td></tr></tbody></table></div></section></body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<body>
+	<section layout:fragment="content">
+		<h1 class="page-title h3">Pending Fee</h1>
+		<p class="text-muted">Academic Year: <b th:text="${year.name}"></b></p>
+		<div class="table-responsive card">
+			<table class="table table-hover mb-0">
+				<thead>
+					<tr>
+						<th>Student</th>
+						<th>Admission No.</th>
+						<th>Grade</th>
+						<th>Pending Due</th>
+						<th>Due Date</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="r:${rows.content}">
+						<td th:text="${r.studentName}"></td>
+						<td th:text="${r.admissionNumber}"></td>
+						<td th:text="${r.gradeName}"></td>
+						<td th:text="${r.due}"></td>
+						<td th:text="${r.dueDate}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+</body>
+
+</html>

@@ -1,5 +1,64 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layouts/base}"><head><title>Fee Components</title></head><body><main layout:fragment="content">
-<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3"><div><div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div><h1 class="page-title h3 mb-1">Fee Components</h1><p class="text-secondary mb-0">Immutable fee concepts used by fee structures.</p></div><a class="btn btn-primary" th:href="@{/billing/fee-components/new}"><i class="bi bi-plus-lg me-1"></i>New Component</a></div>
-<div th:if="${message}" class="alert alert-success"><i class="bi bi-check-circle me-2"></i><span th:text="${message}"></span></div><div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span></div>
-<div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Name</th><th>Status</th><th>Created</th><th class="text-end">Action</th></tr></thead><tbody><tr th:each="c:${components}"><td class="fw-semibold" th:text="${c.name}"></td><td><span class="badge" th:classappend="${c.status.name()=='ACTIVE'}?' text-bg-success':' text-bg-secondary'" th:text="${c.status}"></span></td><td th:text="${#temporals.format(c.createdAt,'dd MMM yyyy HH:mm')}"></td><td class="text-end"><form th:if="${c.status.name()=='ACTIVE'}" th:action="@{/billing/fee-components/{id}/deactivate(id=${c.id})}" method="post" class="d-inline" sec:authorize="hasRole('ADMIN')"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Mark this component INACTIVE?')"><i class="bi bi-pause-circle me-1"></i>Deactivate</button></form><span th:if="${c.status.name()=='INACTIVE'}" class="text-secondary small">Historical</span></td></tr><tr th:if="${#lists.isEmpty(components)}"><td colspan="4" class="text-center py-5 text-secondary">No fee components defined.</td></tr></tbody></table></div></div></div>
-</main></body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layouts/base}">
+
+<head>
+	<title>Fee Components</title>
+</head>
+
+<body>
+	<main layout:fragment="content">
+		<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+			<div>
+				<div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div>
+				<h1 class="page-title h3 mb-1">Fee Components</h1>
+				<p class="text-secondary mb-0">Immutable fee concepts used by fee structures.</p>
+			</div><a class="btn btn-primary" th:href="@{/billing/fee-components/new}"><i
+					class="bi bi-plus-lg me-1"></i>New Component</a>
+		</div>
+		<div th:if="${message}" class="alert alert-success"><i class="bi bi-check-circle me-2"></i><span
+				th:text="${message}"></span></div>
+		<div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span
+				th:text="${error}"></span></div>
+		<div class="card">
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<table class="table table-hover mb-0">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Status</th>
+								<th>Created</th>
+								<th class="text-end">Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="c:${components}">
+								<td class="fw-semibold" th:text="${c.name}"></td>
+								<td><span class="badge"
+										th:classappend="${c.status.name()=='ACTIVE'}?' text-bg-success':' text-bg-secondary'"
+										th:text="${c.status}"></span></td>
+								<td th:text="${#temporals.format(c.createdAt,'dd MMM yyyy HH:mm')}"></td>
+								<td class="text-end">
+									<form th:if="${c.status.name()=='ACTIVE'}"
+										th:action="@{/billing/fee-components/{id}/deactivate(id=${c.id})}" method="post"
+										class="d-inline" sec:authorize="hasRole('ADMIN')"><button
+											class="btn btn-sm btn-outline-danger"
+											onclick="return confirm('Mark this component INACTIVE?')"><i
+												class="bi bi-pause-circle me-1"></i>Deactivate</button></form><span
+										th:if="${c.status.name()=='INACTIVE'}"
+										class="text-secondary small">Historical</span>
+								</td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(components)}">
+								<td colspan="4" class="text-center py-5 text-secondary">No fee components defined.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+
+</html>
