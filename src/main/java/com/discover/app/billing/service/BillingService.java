@@ -147,6 +147,20 @@ public class BillingService {
 				PageRequest.of(Math.max(0, page), 20));
 	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional(readOnly = true)
+	public Page<InvoiceListRow> searchIssuedForView(String term, int page) {
+		Page<Invoice> result = searchIssued(term, page);
+		List<InvoiceListRow> rows = result.getContent().stream()
+				.map(i -> new InvoiceListRow(i.getId(), i.getInvoiceNumber(),
+						i.getStudentEnrollment().getStudent().getFullName(),
+						i.getStudentEnrollment().getStudent().getAdmissionNumber(),
+						i.getStudentEnrollment().getGrade().getName(), i.getBillingMonth(),
+						i.getGenerationDate(), i.getNetAmount()))
+				.toList();
+		return new PageImpl<>(rows, result.getPageable(), result.getTotalElements());
+	}
+
 	@PreAuthorize("isAuthenticated()")
 	@Transactional(readOnly = true)
 	public Invoice detail(Long id) {

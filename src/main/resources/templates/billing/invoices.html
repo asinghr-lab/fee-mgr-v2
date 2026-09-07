@@ -47,13 +47,13 @@
 						<tr th:each="i:${page.content}">
 							<td class="fw-semibold" th:text="${i.invoiceNumber}"></td>
 							<td>
-								<div th:text="${i.studentEnrollment.student.fullName}"></div><small class="text-muted"
-									th:text="${i.studentEnrollment.student.admissionNumber}"></small>
+								<div th:text="${i.studentName}"></div><small class="text-muted"
+									th:text="${i.admissionNumber}"></small>
 							</td>
-							<td th:text="${i.studentEnrollment.grade.name}"></td>
+							<td th:text="${i.gradeName}"></td>
 							<td th:text="${i.billingMonth}"></td>
 							<td th:text="${#temporals.format(i.generationDate,'dd MMM yyyy HH:mm')}"></td>
-							<td class="text-end fw-semibold" th:text="${i.getNetAmount()}"></td>
+							<td class="text-end fw-semibold" th:text="${i.netAmount}"></td>
 							<td><a class="btn btn-sm btn-outline-primary"
 									th:href="@{'/billing/invoices/' + ${i.id}}">View</a></td>
 						</tr>

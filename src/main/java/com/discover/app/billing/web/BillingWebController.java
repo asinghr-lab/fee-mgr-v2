@@ -167,7 +167,7 @@ public class BillingWebController {
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	public String invoices(@RequestParam(required = false) String q, @RequestParam(defaultValue = "0") int page,
 			Model model) {
-		Page<com.discover.app.billing.domain.Invoice> result = service.searchIssued(q, page);
+		Page<InvoiceListRow> result = service.searchIssuedForView(q, page);
 		model.addAttribute("page", result);
 		model.addAttribute("query", q == null ? "" : q);
 		model.addAttribute("activeYear", years.getActive());

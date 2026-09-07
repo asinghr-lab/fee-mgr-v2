@@ -43,6 +43,10 @@ public final class BillingDtos {
 			BigDecimal discountAmount, BigDecimal netAmount) {
 	}
 
+	public record InvoiceListRow(Long id, String invoiceNumber, String studentName, String admissionNumber,
+			String gradeName, LocalDate billingMonth, LocalDateTime generationDate, BigDecimal netAmount) {
+	}
+
 	public record InvoiceResponse(Long id, String invoiceNumber, Long studentId, String studentName,
 			String admissionNumber, String gradeName, String academicYear, LocalDate billingMonth,
 			LocalDateTime generationDate, InvoiceStatus status, LocalDate dueDate, BigDecimal originalAmount,
