@@ -1,1 +1,67 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><head><title>New Fee Structure</title></head><body><main layout:fragment="content"><div class="page-header"><div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div><h1 class="page-title h3 mb-1">Create Fee Structure</h1><p class="text-secondary mb-0">Only ACTIVE fee components can be selected. Once created, the structure cannot be edited.</p></div><div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span></div><form th:action="@{/billing/fee-structures}" th:object="${request}" method="post"><div class="card mb-3"><div class="card-body"><label class="form-label fw-semibold">Structure Name</label><input class="form-control" th:field="*{name}" maxlength="120" required><div class="text-danger small" th:errors="*{name}"></div></div></div><div class="card"><div class="card-header d-flex justify-content-between align-items-center"><strong>Structure Items</strong><button type="button" class="btn btn-sm btn-outline-primary" onclick="addItem()"><i class="bi bi-plus-lg me-1"></i>Add Item</button></div><div class="card-body"><div id="items"><div class="row g-2 mb-2 item-row" th:each="item,stat:${request.items}" th:attr="data-index=${stat.index}"><div class="col-12 col-md-5"><select class="form-select" th:name="|items[${stat.index}].feeComponentId|" required><option value="">Select component</option><option th:each="c:${components}" th:value="${c.id}" th:text="${c.name}"></option></select></div><div class="col-6 col-md-3"><select class="form-select" th:name="|items[${stat.index}].frequency|" required><option value="">Frequency</option><option th:each="f:${T(com.discover.app.billing.domain.FeeFrequency).values()}" th:value="${f}" th:text="${f}"></option></select></div><div class="col-6 col-md-3"><input class="form-control" type="number" min="0.01" step="0.01" placeholder="Amount" th:name="|items[${stat.index}].amount|" required></div><div class="col-12 col-md-1 d-flex"><button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.item-row').remove()"><i class="bi bi-trash"></i></button></div></div></div><div class="small text-secondary mt-2">Each component can appear only once. Amount and frequency belong to the structure item, not the component.</div></div><div class="card-footer bg-white"><a class="btn btn-outline-secondary me-2" th:href="@{/billing/fee-structures}">Cancel</a><button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Create Immutable Structure</button></div></div></form></main><th:block layout:fragment="scripts"><script th:inline="javascript">const components=/*[[${components}]]*/[];let nextIndex=document.querySelectorAll('.item-row').length;function addItem(){const options=components.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');const frequencies=['ONE_TIME','YEARLY','HALF_YEARLY','QUARTERLY','MONTHLY'].map(f=>`<option value="${f}">${f}</option>`).join('');const html=`<div class="row g-2 mb-2 item-row"><div class="col-12 col-md-5"><select class="form-select" name="items[${nextIndex}].feeComponentId" required><option value="">Select component</option>${options}</select></div><div class="col-6 col-md-3"><select class="form-select" name="items[${nextIndex}].frequency" required><option value="">Frequency</option>${frequencies}</select></div><div class="col-6 col-md-3"><input class="form-control" type="number" min="0.01" step="0.01" name="items[${nextIndex}].amount" placeholder="Amount" required></div><div class="col-12 col-md-1 d-flex"><button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.item-row').remove()"><i class="bi bi-trash"></i></button></div></div>`;document.getElementById('items').insertAdjacentHTML('beforeend',html);nextIndex++;}</script></th:block></body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<head>
+	<title>New Fee Structure</title>
+</head>
+
+<body>
+	<main layout:fragment="content">
+		<div class="page-header">
+			<div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div>
+			<h1 class="page-title h3 mb-1">Create Fee Structure</h1>
+			<p class="text-secondary mb-0">Only ACTIVE fee components can be selected. Once created, the structure
+				cannot be edited.</p>
+		</div>
+		<div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span
+				th:text="${error}"></span></div>
+		<form th:action="@{/billing/fee-structures}" th:object="${request}" method="post">
+			<div class="card mb-3">
+				<div class="card-body"><label class="form-label fw-semibold">Structure Name</label><input
+						class="form-control" th:field="*{name}" maxlength="120" required>
+					<div class="text-danger small" th:errors="*{name}"></div>
+				</div>
+			</div>
+			<div class="card">
+				<div class="card-header d-flex justify-content-between align-items-center"><strong>Structure
+						Items</strong><button type="button" class="btn btn-sm btn-outline-primary"
+						onclick="addItem()"><i class="bi bi-plus-lg me-1"></i>Add Item</button></div>
+				<div class="card-body">
+					<div id="items">
+						<div class="row g-2 mb-2 item-row" th:each="item,stat:${request.items}"
+							th:attr="data-index=${stat.index}">
+							<div class="col-12 col-md-5"><select class="form-select"
+									th:name="|items[${stat.index}].feeComponentId|" required>
+									<option value="">Select component</option>
+									<option th:each="c:${components}" th:value="${c.id}" th:text="${c.name}"></option>
+								</select></div>
+							<div class="col-6 col-md-3"><select class="form-select"
+									th:name="|items[${stat.index}].frequency|" required>
+									<option value="">Frequency</option>
+									<option th:each="f:${T(com.discover.app.billing.domain.FeeFrequency).values()}"
+										th:value="${f}" th:text="${f}"></option>
+								</select></div>
+							<div class="col-6 col-md-3"><input class="form-control" type="number" min="0.01" step="0.01"
+									placeholder="Amount" th:name="|items[${stat.index}].amount|" required></div>
+							<div class="col-12 col-md-1 d-flex"><button type="button"
+									class="btn btn-outline-danger w-100" onclick="this.closest('.item-row').remove()"><i
+										class="bi bi-trash"></i></button></div>
+						</div>
+					</div>
+					<div class="small text-secondary mt-2">Each component can appear only once. Amount and frequency
+						belong to the structure item, not the component.</div>
+				</div>
+				<div class="card-footer bg-white"><a class="btn btn-outline-secondary me-2"
+						th:href="@{/billing/fee-structures}">Cancel</a><button class="btn btn-primary"><i
+							class="bi bi-check-lg me-1"></i>Create Immutable Structure</button></div>
+			</div>
+		</form>
+	</main>
+	<th:block layout:fragment="scripts">
+		<script
+			th:inline="javascript">const components =/*[[${components}]]*/[]; let nextIndex = document.querySelectorAll('.item-row').length; function addItem() {const options = components.map(c => `<option value="${c.id}">${c.name}</option>`).join(''); const frequencies = ['ONE_TIME', 'YEARLY', 'HALF_YEARLY', 'QUARTERLY', 'MONTHLY'].map(f => `<option value="${f}">${f}</option>`).join(''); const html = `<div class="row g-2 mb-2 item-row"><div class="col-12 col-md-5"><select class="form-select" name="items[${nextIndex}].feeComponentId" required><option value="">Select component</option>${options}</select></div><div class="col-6 col-md-3"><select class="form-select" name="items[${nextIndex}].frequency" required><option value="">Frequency</option>${frequencies}</select></div><div class="col-6 col-md-3"><input class="form-control" type="number" min="0.01" step="0.01" name="items[${nextIndex}].amount" placeholder="Amount" required></div><div class="col-12 col-md-1 d-flex"><button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.item-row').remove()"><i class="bi bi-trash"></i></button></div></div>`; document.getElementById('items').insertAdjacentHTML('beforeend', html); nextIndex++;}</script>
+	</th:block>
+</body>
+
+</html>

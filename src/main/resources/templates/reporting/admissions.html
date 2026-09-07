@@ -1,1 +1,31 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><body><section layout:fragment="content"><h1 class="page-title h3">Admissions</h1><div class="table-responsive card"><table class="table"><thead><tr><th>Student</th><th>Admission No.</th><th>Admission Date</th><th>Grade</th></tr></thead><tbody><tr th:each="r:${rows.content}"><td th:text="${r.studentName}"></td><td th:text="${r.admissionNumber}"></td><td th:text="${r.admissionDate}"></td><td th:text="${r.gradeName}"></td></tr></tbody></table></div></section></body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<body>
+	<section layout:fragment="content">
+		<h1 class="page-title h3">Admissions</h1>
+		<div class="table-responsive card">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Student</th>
+						<th>Admission No.</th>
+						<th>Admission Date</th>
+						<th>Grade</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="r:${rows.content}">
+						<td th:text="${r.studentName}"></td>
+						<td th:text="${r.admissionNumber}"></td>
+						<td th:text="${r.admissionDate}"></td>
+						<td th:text="${r.gradeName}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+</body>
+
+</html>
