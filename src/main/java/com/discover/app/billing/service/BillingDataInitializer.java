@@ -13,9 +13,6 @@ import com.discover.app.billing.domain.FeeStructureItem;
 import com.discover.app.billing.repository.FeeComponentRepository;
 import com.discover.app.billing.repository.FeeStructureRepository;
 import com.discover.app.billing.repository.GradeFeeStructureRepository;
-import com.discover.app.school.repository.AcademicYearRepository;
-import com.discover.app.school.repository.GradeRepository;
-import com.discover.app.school.repository.SchoolRepository;
 
 @Configuration
 public class BillingDataInitializer {

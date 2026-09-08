@@ -48,55 +48,63 @@ public class BillingService {
 	}
 
 	@Transactional
-	public int generateForAllGrades(LocalDate billingMonth, String username) {
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	public List<InvoiceGenerationLog> generateForGrade(Long gradeId, LocalDate billingMonth, String username) {
 		AcademicYear y = years.requireActive();
+		billingMonth = billingMonth.withDayOfMonth(1);
 		validateMonth(y, billingMonth);
-		int count = 0;
-		for (StudentEnrollment e : enrollments.findApprovedByAcademicYear(y.getId(), EnrollmentStatus.APPROVED)) {
-			if (generateForEnrollment(e, y, billingMonth))
-				count++;
-		}
-		return count;
+		List<InvoiceGenerationLog> logs = new ArrayList<>();
+		List<StudentEnrollment> candidates = enrollments.findApprovedByAcademicYearAndGrade(y.getId(), gradeId,
+				EnrollmentStatus.APPROVED);
+		for (StudentEnrollment e : candidates)
+			logs.add(generateForEnrollment(e, y, billingMonth));
+		return logs;
 	}
 
-	@Transactional
-	public int generateForGrade(Long gradeId, LocalDate billingMonth, String username) {
-		AcademicYear y = years.requireActive();
-		validateMonth(y, billingMonth);
-		int count = 0;
-		for (StudentEnrollment e : enrollments.findApprovedByAcademicYearAndGrade(y.getId(), gradeId,
-				EnrollmentStatus.APPROVED)) {
-			if (generateForEnrollment(e, y, billingMonth))
-				count++;
-		}
-		return count;
-	}
-
-	private boolean generateForEnrollment(StudentEnrollment enrollment, AcademicYear year, LocalDate billingMonth) {
-		LocalDate effectiveDate = billingMonth;
-		GradeFeeStructure gfs = assignments.findActiveForGrade(enrollment.getGrade(), effectiveDate).stream()
-				.findFirst().orElseThrow(() -> new IllegalStateException("No active fee structure is assigned to grade "
-						+ enrollment.getGrade().getName() + " for " + billingMonth + "."));
+	private InvoiceGenerationLog generateForEnrollment(StudentEnrollment enrollment, AcademicYear year,
+			LocalDate billingMonth) {
+		String studentName = enrollment.getStudent().getFullName();
+		String admission = enrollment.getStudent().getAdmissionNumber();
+		String gradeName = enrollment.getGrade().getName();
+		GradeFeeStructure gfs = assignments.findForGradeId(enrollment.getGrade().getId()).stream().findFirst()
+				.orElse(null);
+		if (gfs == null)
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"No FeeStructure linked to Grade", null);
 		FeeStructure structure = gfs.getFeeStructure();
 		if (structure.getStatus() != FeeStatus.ACTIVE)
-			throw new IllegalStateException("The fee structure assigned to grade " + enrollment.getGrade().getName()
-					+ " is INACTIVE and cannot be used for new invoices.");
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"Linked FeeStructure is INACTIVE", null);
 		LocalDateTime now = LocalDateTime.now();
-		List<FeeStructureItem> applicable = new ArrayList<>();
-		for (FeeStructureItem item : structure.getItems()) {
-			if (isApplicable(item.getFrequency(), year, billingMonth, now)
-					&& !alreadyInvoiced(enrollment, year, item.getFrequency(), billingMonth, now))
-				applicable.add(item);
-		}
+		List<InvoiceStatus> blocking = List.of(InvoiceStatus.DRAFT, InvoiceStatus.ISSUED, InvoiceStatus.PAID);
+		Invoice existingMonthly = invoices
+				.findBlockingMonthlyInvoice(year.getId(), enrollment.getId(), blocking, billingMonth).stream()
+				.findFirst().orElse(null);
+		if (existingMonthly != null)
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"Invoice already exists for billing month with status " + existingMonthly.getStatus(),
+					existingMonthly.getInvoiceNumber());
+		LocalDate generationMonthStart = now.toLocalDate().withDayOfMonth(1);
+		LocalDate generationMonthEnd = generationMonthStart.plusMonths(1);
+		Invoice existingGenerated = invoices.findBlockingGeneratedInMonth(year.getId(), enrollment.getId(), blocking,
+				generationMonthStart.atStartOfDay(), generationMonthEnd.atStartOfDay()).stream().findFirst().orElse(null);
+		if (existingGenerated != null)
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"Invoice already generated in generation month with status " + existingGenerated.getStatus(),
+					existingGenerated.getInvoiceNumber());
+		List<FeeStructureItem> applicable = structure.getItems().stream()
+				.filter(item -> isApplicable(item.getFrequency(), year, billingMonth, now)).toList();
 		if (applicable.isEmpty())
-			return false;
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"No applicable fee components for the selected billing month", null);
 		String number = nextInvoiceNumber(now);
 		Invoice invoice = new Invoice(number, enrollment, year, billingMonth, now,
 				calculateDueDate(applicable, billingMonth, now));
 		applicable.forEach(item -> invoice
 				.addItem(new InvoiceItem(item.getFeeComponent(), item.getFrequency(), item.getAmount())));
 		invoices.save(invoice);
-		return true;
+		return new InvoiceGenerationLog(studentName, admission, gradeName, "GENERATED",
+				"Invoice generated successfully", number);
 	}
 
 	private boolean isApplicable(FeeFrequency f, AcademicYear y, LocalDate billingMonth, LocalDateTime now) {
@@ -110,16 +118,6 @@ public class BillingService {
 		case HALF_YEARLY -> academicOffset == 0 || academicOffset == 6;
 		case QUARTERLY -> academicOffset % 3 == 0;
 		};
-	}
-
-	private boolean alreadyInvoiced(StudentEnrollment e, AcademicYear y, FeeFrequency f, LocalDate billingMonth,
-			LocalDateTime now) {
-		List<InvoiceStatus> blockingStatuses = List.of(InvoiceStatus.DRAFT, InvoiceStatus.ISSUED, InvoiceStatus.PAID);
-		if (f == FeeFrequency.MONTHLY)
-			return invoices.countMonthlyPeriodByStatuses(y.getId(), e.getId(), blockingStatuses, billingMonth) > 0;
-		LocalDate generationMonth = now.toLocalDate().withDayOfMonth(1);
-		return invoices.countByEnrollmentYearStatusesBillingMonthAndFrequency(e.getId(), y.getId(), blockingStatuses,
-				generationMonth, f) > 0;
 	}
 
 	private void validateMonth(AcademicYear y, LocalDate m) {
@@ -156,8 +154,8 @@ public class BillingService {
 				.map(i -> new InvoiceListRow(i.getId(), i.getInvoiceNumber(),
 						i.getStudentEnrollment().getStudent().getFullName(),
 						i.getStudentEnrollment().getStudent().getAdmissionNumber(),
-						i.getStudentEnrollment().getGrade().getName(), i.getBillingMonth(),
-						i.getGenerationDate(), i.getNetAmount()))
+						i.getStudentEnrollment().getGrade().getName(), i.getBillingMonth(), i.getGenerationDate(),
+						i.getNetAmount()))
 				.toList();
 		return new PageImpl<>(rows, result.getPageable(), result.getTotalElements());
 	}
@@ -167,7 +165,6 @@ public class BillingService {
 	public Invoice detail(Long id) {
 		return invoices.findDetailedById(id).orElseThrow(() -> new IllegalArgumentException("Invoice not found."));
 	}
-
 
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	@Transactional(readOnly = true)
@@ -187,7 +184,8 @@ public class BillingService {
 		Invoice invoice = detail(invoiceId);
 		ensureIssued(invoice);
 		if (discounts.existsByInvoiceId(invoiceId))
-			throw new IllegalStateException("A discount request has already been created for this invoice. Only one discount request is allowed during the invoice lifetime.");
+			throw new IllegalStateException(
+					"A discount request has already been created for this invoice. Only one discount request is allowed during the invoice lifetime.");
 		InvoiceItem item = invoice.getItems().stream().filter(x -> x.getId().equals(form.invoiceItemId())).findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Invoice item does not belong to this invoice."));
 		if (form.requestedAmount().compareTo(item.getNetAmount()) > 0)

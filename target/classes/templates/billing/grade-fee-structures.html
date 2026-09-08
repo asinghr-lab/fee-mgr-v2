@@ -17,7 +17,7 @@
 	<div class="card">
 		<div class="table-responsive">
 			<table class="table table-hover align-middle mb-0">
-				<thead><tr><th>Grade</th><th>Linked Fee Structure</th><th>Effective From</th><th class="text-end">Action</th></tr></thead>
+				<thead><tr><th>Grade</th><th>Linked Fee Structure</th><th class="text-end">Action</th></tr></thead>
 				<tbody>
 				<tr th:each="a : ${assignments}">
 					<td class="fw-semibold" th:text="${a.gradeName}"></td>
@@ -26,7 +26,6 @@
 						<span th:text="${a.feeStructureName}"></span>
 						<span class="badge text-bg-success ms-2">ACTIVE</span>
 					</td>
-					<td th:text="${a.effectiveFrom == null ? '—' : a.effectiveFrom}"></td>
 					<td class="text-end">
 						<div class="d-flex justify-content-end gap-2 align-items-center">
 							<form sec:authorize="hasRole('ADMIN')" th:action="@{/billing/grade-fee-structures/{gradeId}(gradeId=${a.gradeId})}" method="post" class="d-flex gap-2">
@@ -37,11 +36,11 @@
 								<button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-save me-1"></i>Save</button>
 							</form>
 							<span sec:authorize="hasRole('STAFF')" class="text-muted small">View only</span>
-							<a class="btn btn-sm btn-outline-secondary" th:href="@{/billing/grade-fee-structures/{id}/history(id=${a.gradeId})}"><i class="bi bi-clock-history"></i></a>
+							
 						</div>
 					</td>
 				</tr>
-				<tr th:if="${#lists.isEmpty(assignments)}"><td colspan="4" class="text-center py-5 text-muted">No grades found.</td></tr>
+				<tr th:if="${#lists.isEmpty(assignments)}"><td colspan="3" class="text-center py-5 text-muted">No grades found.</td></tr>
 				</tbody>
 			</table>
 		</div>

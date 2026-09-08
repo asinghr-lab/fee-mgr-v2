@@ -31,16 +31,14 @@ public final class BillingDtos {
 	public record FeeStructureResponse(Long id, String name, FeeStatus status, List<FeeStructureItemResponse> items) {
 	}
 
-	public record GradeFeeStructureRequest(@NotNull Long gradeId, @NotNull Long feeStructureId,
-			@NotNull LocalDate effectiveFrom) {
+	public record GradeFeeStructureRequest(@NotNull Long gradeId, @NotNull Long feeStructureId) {
 	}
 
 	public record GradeFeeStructureResponse(Long id, Long gradeId, String gradeName, Long feeStructureId,
-			String feeStructureName, LocalDate effectiveFrom, LocalDate effectiveTo) {
+			String feeStructureName) {
 	}
 
-	public record GradeFeeStructureRow(Long gradeId, String gradeName, Long feeStructureId, String feeStructureName,
-			LocalDate effectiveFrom) {
+	public record GradeFeeStructureRow(Long gradeId, String gradeName, Long feeStructureId, String feeStructureName) {
 	}
 
 	public record GradeFeeStructureChangeRequest(@NotNull Long feeStructureId) {
@@ -52,6 +50,10 @@ public final class BillingDtos {
 
 	public record InvoiceListRow(Long id, String invoiceNumber, String studentName, String admissionNumber,
 			String gradeName, LocalDate billingMonth, LocalDateTime generationDate, BigDecimal netAmount) {
+	}
+
+	public record InvoiceGenerationLog(String studentName, String admissionNumber, String gradeName,
+			String result, String reason, String invoiceNumber) {
 	}
 
 	public record InvoiceResponse(Long id, String invoiceNumber, Long studentId, String studentName,

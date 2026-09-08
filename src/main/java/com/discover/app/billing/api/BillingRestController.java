@@ -68,11 +68,7 @@ public class BillingRestController {
 	@PostMapping("/grade-fee-structures")
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	public Object assign(@Valid @RequestBody GradeFeeStructureRequest r) {
-		return service.assignmentResponse(service.assignToGrade(r.gradeId(), r.feeStructureId(), r.effectiveFrom()));
+		return service.assignmentResponse(service.assignToGrade(r.gradeId(), r.feeStructureId()));
 	}
 
-	@GetMapping("/grades/{gradeId}/fee-structures/history")
-	public Object history(@PathVariable Long gradeId) {
-		return service.assignmentHistory(gradeId).stream().map(service::assignmentResponse).toList();
-	}
 }

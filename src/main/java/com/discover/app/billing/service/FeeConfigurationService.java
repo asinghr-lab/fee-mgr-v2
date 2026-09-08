@@ -96,34 +96,29 @@ public class FeeConfigurationService {
 
 	@Transactional
 	@PreAuthorize("hasRole('ADMIN')")
-	public GradeFeeStructure assignToGrade(Long gradeId, Long structureId, LocalDate effectiveFrom) {
+	public GradeFeeStructure assignToGrade(Long gradeId, Long structureId) {
 		Grade grade = grades.findById(gradeId).orElseThrow(() -> new IllegalArgumentException("Grade not found."));
 		FeeStructure structure = structures.findById(structureId)
 				.orElseThrow(() -> new IllegalArgumentException("Fee structure not found."));
 		if (structure.getStatus() != FeeStatus.ACTIVE)
 			throw new IllegalArgumentException("Only active fee structures can be assigned to a grade.");
-		LocalDate date = effectiveFrom;
-		assignments.findActiveForGradeId(gradeId, date).stream().findFirst().ifPresent(current -> {
-			if (current.getFeeStructure().getId().equals(structureId))
-				throw new IllegalArgumentException("This fee structure is already active for the grade.");
-			if (!date.isAfter(current.getEffectiveFrom()))
-				throw new IllegalArgumentException(
-						"The new effective date must be after the current assignment effective date.");
-			current.closeOn(date.minusDays(1));
-		});
-		return assignments.save(new GradeFeeStructure(grade, structure, date));
+		GradeFeeStructure current = assignments.findForGradeId(gradeId).stream().findFirst().orElse(null);
+		if (current == null) return assignments.save(new GradeFeeStructure(grade, structure));
+		if (current.getFeeStructure().getId().equals(structureId))
+			throw new IllegalArgumentException("This fee structure is already linked to the grade.");
+		current.changeFeeStructure(structure);
+		return current;
 	}
 
 	@PreAuthorize("isAuthenticated()")
 	@Transactional
 	public List<GradeFeeStructureRow> currentAssignments() {
-		LocalDate today = LocalDate.now();
-		Map<Long, GradeFeeStructure> current = assignments.findAllActiveOn(today).stream()
+		Map<Long, GradeFeeStructure> current = assignments.findCurrentAssignments().stream()
 				.collect(Collectors.toMap(a -> a.getGrade().getId(), a -> a, (a, b) -> a));
 		return allGrades().stream().map(grade -> {
 			GradeFeeStructure a = current.get(grade.getId());
 			return new GradeFeeStructureRow(grade.getId(), grade.getName(), a == null ? null : a.getFeeStructure().getId(),
-					a == null ? null : a.getFeeStructure().getName(), a == null ? null : a.getEffectiveFrom());
+					a == null ? null : a.getFeeStructure().getName());
 		}).toList();
 	}
 
@@ -134,7 +129,7 @@ public class FeeConfigurationService {
 
 	@PreAuthorize("isAuthenticated()")
 	public List<GradeFeeStructure> assignmentHistory(Long gradeId) {
-		return assignments.findByGradeOrderByEffectiveFromDescIdDesc(grades.findById(gradeId).orElseThrow());
+		return assignments.findByGradeOrderByIdDesc(grades.findById(gradeId).orElseThrow());
 	}
 
 	@PreAuthorize("isAuthenticated()")
@@ -156,6 +151,6 @@ public class FeeConfigurationService {
 
 	public GradeFeeStructureResponse assignmentResponse(GradeFeeStructure a) {
 		return new GradeFeeStructureResponse(a.getId(), a.getGrade().getId(), a.getGrade().getName(),
-				a.getFeeStructure().getId(), a.getFeeStructure().getName(), a.getEffectiveFrom(), a.getEffectiveTo());
+				a.getFeeStructure().getId(), a.getFeeStructure().getName());
 	}
 }
