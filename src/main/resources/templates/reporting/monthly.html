@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<body>
+	<section layout:fragment="content">
+		<h1 class="page-title h3">Monthly Collection Report</h1>
+		<p class="text-muted">Academic Year: <b th:text="${year.name}"></b></p>
+		<form class="row g-2 mb-3">
+			<div class="col-md-4"><label class="form-label">Billing Month (YYYYMM)</label><input class="form-control"
+					name="month" th:value="${month}" pattern="[0-9]{6}" required></div>
+			<div class="col-auto align-self-end"><button class="btn btn-primary">View</button></div>
+		</form>
+		<div class="table-responsive card">
+			<table class="table table-hover mb-0">
+				<thead>
+					<tr>
+						<th>Grade</th>
+						<th>Invoiced</th>
+						<th>Discount Requested</th>
+						<th>Discount Approved</th>
+						<th>Collected</th>
+						<th>Outstanding</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="r:${rows.content}">
+						<td><a th:href="@{/reporting/yearly/grade/{id}(id=${r.id})}" th:text="${r.name}"></a></td>
+						<td th:text="${r.invoiced}"></td>
+						<td th:text="${r.requestedDiscount}"></td>
+						<td th:text="${r.approvedDiscount}"></td>
+						<td th:text="${r.collected}"></td>
+						<td th:text="${r.outstanding}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+</body>
+
+</html>

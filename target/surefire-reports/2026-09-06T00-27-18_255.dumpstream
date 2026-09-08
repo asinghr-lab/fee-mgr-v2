@@ -1,5 +1,0 @@
-# Created at 2026-09-06T00:27:18.546
-Boot Manifest-JAR contains absolute paths in classpath 'D:\git-repo\fee-mgr-v2\target\test-classes'
-Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-'other' has different root
-

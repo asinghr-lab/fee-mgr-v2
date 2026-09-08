@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<head>
+	<title>Record Payment</title>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="page-header">
+			<h1 class="page-title h3">Record Payment</h1>
+		</div>
+		<div class="card">
+			<div class="card-body">
+				<div class="alert alert-info">Payment must exactly equal the invoice Net Amount. Partial and advance
+					payments are not allowed.</div>
+				<dl class="row">
+					<dt class="col-sm-3">Invoice</dt>
+					<dd class="col-sm-9" th:text="${invoice.invoiceNumber}"></dd>
+					<dt class="col-sm-3">Student</dt>
+					<dd class="col-sm-9" th:text="${invoice.studentEnrollment.student.fullName}"></dd>
+					<dt class="col-sm-3">Net Amount</dt>
+					<dd class="col-sm-9 fw-bold" th:text="${invoice.netAmount}"></dd>
+				</dl>
+				<form method="post" th:action="@{/collection/payments}" class="row g-3"><input type="hidden"
+						name="invoiceId" th:value="${invoice.id}">
+					<div class="col-md-4"><label class="form-label">Amount</label><input class="form-control"
+							name="amount" th:value="${invoice.netAmount}" required></div>
+					<div class="col-md-5"><label class="form-label">Payment Date/Time</label><input class="form-control"
+							type="datetime-local" name="paidAt" required></div>
+					<div class="col-12"><label class="form-label">Notes</label><textarea class="form-control"
+							name="notes"></textarea></div>
+					<div class="col-12"><button class="btn btn-primary">Record Payment</button><a
+							class="btn btn-outline-secondary ms-2"
+							th:href="@{/billing/invoices/{id}(id=${invoice.id})}">Cancel</a></div>
+				</form>
+			</div>
+		</div>
+	</section>
+</body>
+
+</html>

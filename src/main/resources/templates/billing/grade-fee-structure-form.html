@@ -1,1 +1,43 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><head><title>Assign Fee Structure</title></head><body><main layout:fragment="content"><div class="page-header"><div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div><h1 class="page-title h3 mb-1">Assign Fee Structure to Grade</h1><p class="text-secondary mb-0">Only ACTIVE structures can be newly assigned. Previous assignments are retained as history.</p></div><div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span></div><div class="card"><div class="card-body p-4"><form th:action="@{/billing/grade-fee-structures}" th:object="${request}" method="post" class="row g-3"><div class="col-12 col-md-6"><label class="form-label fw-semibold">Grade</label><select class="form-select" th:field="*{gradeId}" required><option value="">Select grade</option><option th:each="g:${grades}" th:value="${g.id}" th:text="${g.name}"></option></select></div><div class="col-12 col-md-6"><label class="form-label fw-semibold">Active Fee Structure</label><select class="form-select" th:field="*{feeStructureId}" required><option value="">Select fee structure</option><option th:each="s:${structures}" th:value="${s.id}" th:text="${s.name}"></option></select></div><div class="col-12 col-md-6"><label class="form-label fw-semibold">Effective From</label><input class="form-control" type="date" th:field="*{effectiveFrom}" required></div><div class="col-12"><a class="btn btn-outline-secondary me-2" th:href="@{/billing/grade-fee-structures}">Cancel</a><button class="btn btn-primary"><i class="bi bi-link-45deg me-1"></i>Assign Structure</button></div></form></div></div></main></body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<head>
+	<title>Assign Fee Structure</title>
+</head>
+
+<body>
+	<main layout:fragment="content">
+		<div class="page-header">
+			<div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div>
+			<h1 class="page-title h3 mb-1">Assign Fee Structure to Grade</h1>
+			<p class="text-secondary mb-0">Only ACTIVE structures can be newly assigned. Previous assignments are
+				retained as history.</p>
+		</div>
+		<div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span
+				th:text="${error}"></span></div>
+		<div class="card">
+			<div class="card-body p-4">
+				<form th:action="@{/billing/grade-fee-structures}" th:object="${request}" method="post" class="row g-3">
+					<div class="col-12 col-md-6"><label class="form-label fw-semibold">Grade</label><select
+							class="form-select" th:field="*{gradeId}" required>
+							<option value="">Select grade</option>
+							<option th:each="g:${grades}" th:value="${g.id}" th:text="${g.name}"></option>
+						</select></div>
+					<div class="col-12 col-md-6"><label class="form-label fw-semibold">Active Fee
+							Structure</label><select class="form-select" th:field="*{feeStructureId}" required>
+							<option value="">Select fee structure</option>
+							<option th:each="s:${structures}" th:value="${s.id}" th:text="${s.name}"></option>
+						</select></div>
+					<div class="col-12 col-md-6"><label class="form-label fw-semibold">Effective From</label><input
+							class="form-control" type="date" th:field="*{effectiveFrom}" required></div>
+					<div class="col-12"><a class="btn btn-outline-secondary me-2"
+							th:href="@{/billing/grade-fee-structures}">Cancel</a><button class="btn btn-primary"><i
+								class="bi bi-link-45deg me-1"></i>Assign Structure</button></div>
+				</form>
+			</div>
+		</div>
+	</main>
+</body>
+
+</html>

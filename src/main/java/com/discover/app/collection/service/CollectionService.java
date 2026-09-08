@@ -1,0 +1,81 @@
+package com.discover.app.collection.service;
+
+import com.discover.app.billing.domain.*;
+import com.discover.app.billing.repository.InvoiceRepository;
+import com.discover.app.collection.domain.*;
+import com.discover.app.collection.dto.CollectionDtos.*;
+import com.discover.app.collection.repository.PaymentRepository;
+import com.discover.app.identity.domain.User;
+import com.discover.app.identity.repository.UserRepository;
+import com.discover.app.school.service.AcademicYearService;
+import org.springframework.data.domain.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.*;
+import java.time.*;
+import java.time.format.*;
+import java.util.*;
+
+@Service
+public class CollectionService {
+	private final PaymentRepository payments;
+	private final InvoiceRepository invoices;
+	private final AcademicYearService years;
+	private final UserRepository users;
+
+	public CollectionService(PaymentRepository p, InvoiceRepository i, AcademicYearService y, UserRepository u) {
+		payments = p;
+		invoices = i;
+		years = y;
+		users = u;
+	}
+
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional
+	public Payment record(Long invoiceId, BigDecimal amount, LocalDateTime paidAt, String notes, String username) {
+		Invoice invoice = invoices.findDetailedById(invoiceId)
+				.orElseThrow(() -> new IllegalArgumentException("Invoice not found."));
+		if (invoice.getStatus() != InvoiceStatus.ISSUED)
+			throw new IllegalStateException("Only ISSUED invoices can be paid.");
+		if (payments.existsByInvoiceIdAndStatus(invoiceId, PaymentStatus.RECORDED))
+			throw new IllegalStateException("This invoice has already been paid.");
+		if (amount == null || amount.compareTo(invoice.getNetAmount()) != 0)
+			throw new IllegalArgumentException(
+					"Payment must exactly equal invoice net amount: " + invoice.getNetAmount());
+		if (paidAt == null)
+			paidAt = LocalDateTime.now();
+		if (paidAt.toLocalDate().isAfter(LocalDate.now()))
+			throw new IllegalArgumentException("Payment date cannot be in the future.");
+		User u = users.findByUsername(username).orElseThrow();
+		Payment payment = payments.save(new Payment(nextReceiptNumber(paidAt), invoice, amount, paidAt, u, notes));
+		invoice.markPaid();
+		return payment;
+	}
+
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional(readOnly = true)
+	public Page<Payment> search(String term, int page) {
+		return payments.search(PaymentStatus.RECORDED, years.requireActive().getId(),
+				term == null || term.isBlank() ? null : term.trim(), PageRequest.of(Math.max(0, page), 20));
+	}
+
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional(readOnly = true)
+	public Payment findByInvoice(Long id) {
+		return payments.findByInvoiceId(id).orElse(null);
+	}
+
+	private String nextReceiptNumber(LocalDateTime dt) {
+		String prefix = "REC-" + dt.getYear() + "-"
+				+ dt.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH) + "-";
+		return prefix + String.format("%06d", payments.count() + 1);
+	}
+
+	public PaymentResponse response(Payment p) {
+		var i = p.getInvoice();
+		var s = i.getStudentEnrollment().getStudent();
+		return new PaymentResponse(p.getId(), p.getReceiptNumber(), i.getId(), i.getInvoiceNumber(), s.getFullName(),
+				s.getAdmissionNumber(), p.getAmount(), p.getPaidAt(), p.getStatus().name());
+	}
+}

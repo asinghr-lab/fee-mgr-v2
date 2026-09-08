@@ -1,7 +1,71 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><head><title>Users</title></head><body>
-<section layout:fragment="content">
-<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3"><div><div class="text-uppercase small text-primary fw-bold">Administration</div><h1 class="page-title h3 mb-1">Users</h1><p class="text-muted mb-0">Manage application users and their roles.</p></div><a class="btn btn-primary" th:href="@{/admin/users/new}"><i class="bi bi-person-plus-fill me-1"></i>Add New User</a></div>
-<div th:if="${message}" class="alert alert-success"><i class="bi bi-check-circle me-2"></i><span th:text="${message}"></span></div><div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i><span th:text="${error}"></span></div>
-<div class="card"><div class="card-header py-3"><strong>Application users</strong><span class="text-muted small ms-2" th:text="${users.totalElements + ' users'}"></span></div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Username</th><th>Role</th><th>Status</th></tr></thead><tbody><tr th:each="u : ${users.content}"><td><a class="fw-semibold" th:href="@{'/admin/users/' + ${u.id}}" th:text="${u.username}">admin</a></td><td><span th:each="ur : ${u.userRoles}" class="badge text-bg-primary me-1" th:text="${ur.role}">ADMIN</span></td><td><span class="badge" th:classappend="${u.enabled ? 'text-bg-success' : 'text-bg-secondary'}" th:text="${u.enabled ? 'ACTIVE' : 'INACTIVE'}">ACTIVE</span></td></tr><tr th:if="${users.empty}"><td colspan="3" class="text-center text-muted py-4">No users found.</td></tr></tbody></table></div>
-<div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2"><span class="small text-muted" th:text="'Page ' + (${users.number + 1}) + ' of ' + ${users.totalPages == 0 ? 1 : users.totalPages}">Page 1 of 1</span><nav th:if="${users.totalPages > 1}"><ul class="pagination pagination-sm mb-0"><li class="page-item" th:classappend="${users.first ? 'disabled' : ''}"><a class="page-link" th:href="@{/admin/users(page=${users.number - 1})}">Previous</a></li><li class="page-item" th:each="p : ${#numbers.sequence(0, users.totalPages - 1)}" th:classappend="${p == users.number ? 'active' : ''}"><a class="page-link" th:href="@{/admin/users(page=${p})}" th:text="${p + 1}">1</a></li><li class="page-item" th:classappend="${users.last ? 'disabled' : ''}"><a class="page-link" th:href="@{/admin/users(page=${users.number + 1})}">Next</a></li></ul></nav></div></div>
-</section></body></html>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<head>
+	<title>Users</title>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+			<div>
+				<div class="text-uppercase small text-primary fw-bold">Administration</div>
+				<h1 class="page-title h3 mb-1">Users</h1>
+				<p class="text-muted mb-0">Manage application users and their roles.</p>
+			</div><a class="btn btn-primary" th:href="@{/admin/users/new}"><i
+					class="bi bi-person-plus-fill me-1"></i>Add New User</a>
+		</div>
+		<div th:if="${message}" class="alert alert-success"><i class="bi bi-check-circle me-2"></i><span
+				th:text="${message}"></span></div>
+		<div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i><span
+				th:text="${error}"></span></div>
+		<div class="card">
+			<div class="card-header py-3"><strong>Application users</strong><span class="text-muted small ms-2"
+					th:text="${users.totalElements + ' users'}"></span></div>
+			<div class="table-responsive">
+				<table class="table table-hover mb-0">
+					<thead>
+						<tr>
+							<th>Username</th>
+							<th>Role</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="u : ${users.content}">
+							<td><a class="fw-semibold" th:href="@{'/admin/users/' + ${u.id}}"
+									th:text="${u.username}">admin</a></td>
+							<td><span th:each="ur : ${u.userRoles}" class="badge text-bg-primary me-1"
+									th:text="${ur.role}">ADMIN</span></td>
+							<td><span class="badge"
+									th:classappend="${u.enabled ? 'text-bg-success' : 'text-bg-secondary'}"
+									th:text="${u.enabled ? 'ACTIVE' : 'INACTIVE'}">ACTIVE</span></td>
+						</tr>
+						<tr th:if="${users.empty}">
+							<td colspan="3" class="text-center text-muted py-4">No users found.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2"><span
+					class="small text-muted"
+					th:text="'Page ' + (${users.number + 1}) + ' of ' + ${users.totalPages == 0 ? 1 : users.totalPages}">Page
+					1 of 1</span>
+				<nav th:if="${users.totalPages > 1}">
+					<ul class="pagination pagination-sm mb-0">
+						<li class="page-item" th:classappend="${users.first ? 'disabled' : ''}"><a class="page-link"
+								th:href="@{/admin/users(page=${users.number - 1})}">Previous</a></li>
+						<li class="page-item" th:each="p : ${#numbers.sequence(0, users.totalPages - 1)}"
+							th:classappend="${p == users.number ? 'active' : ''}"><a class="page-link"
+								th:href="@{/admin/users(page=${p})}" th:text="${p + 1}">1</a></li>
+						<li class="page-item" th:classappend="${users.last ? 'disabled' : ''}"><a class="page-link"
+								th:href="@{/admin/users(page=${users.number + 1})}">Next</a></li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</section>
+</body>
+
+</html>

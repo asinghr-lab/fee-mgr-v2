@@ -6,6 +6,7 @@ import com.discover.app.billing.service.FeeConfigurationService;
 import com.discover.app.school.service.AcademicYearService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpSession;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import java.util.List;
 public class BillingWebController {
 	private final BillingService service;
 	private final AcademicYearService years;
+
 	private final FeeConfigurationService feeService;
 
 	public BillingWebController(BillingService service, AcademicYearService years, FeeConfigurationService feeService) {
@@ -120,53 +123,37 @@ public class BillingWebController {
 	}
 
 	@GetMapping("/grade-fee-structures")
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	public String assignments(Model model) {
-		model.addAttribute("assignments", feeService.assignments());
+		model.addAttribute("assignments", feeService.currentAssignments());
+		model.addAttribute("structures", feeService.activeStructures());
 		return "billing/grade-fee-structures";
 	}
 
-	@GetMapping("/grade-fee-structures/new")
-	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-	public String assignmentForm(Model model) {
-		model.addAttribute("grades", feeService.allGrades());
-		model.addAttribute("structures", feeService.activeStructures());
-		model.addAttribute("request", new GradeFeeStructureRequest(null, null, java.time.LocalDate.now()));
-		return "billing/grade-fee-structure-form";
-	}
-
-	@PostMapping("/grade-fee-structures")
-	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-	public String assign(@Valid @ModelAttribute("request") GradeFeeStructureRequest request, BindingResult result,
-			Model model, RedirectAttributes redirect) {
+	@PostMapping("/grade-fee-structures/{gradeId}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public String changeGradeFeeStructure(@PathVariable Long gradeId,
+			@Valid @ModelAttribute("request") GradeFeeStructureChangeRequest request, BindingResult result,
+			RedirectAttributes redirect) {
 		if (result.hasErrors()) {
-			model.addAttribute("grades", feeService.allGrades());
-			model.addAttribute("structures", feeService.activeStructures());
-			return "billing/grade-fee-structure-form";
+			redirect.addFlashAttribute("error", "Please select an active fee structure.");
+			return "redirect:/billing/grade-fee-structures";
 		}
 		try {
-			feeService.assignToGrade(request.gradeId(), request.feeStructureId(), request.effectiveFrom());
-			redirect.addFlashAttribute("message", "Fee structure assigned to grade successfully.");
-			return "redirect:/billing/grade-fee-structures";
-		} catch (IllegalArgumentException ex) {
-			model.addAttribute("grades", feeService.allGrades());
-			model.addAttribute("structures", feeService.activeStructures());
-			model.addAttribute("error", ex.getMessage());
-			return "billing/grade-fee-structure-form";
+			feeService.assignToGrade(gradeId, request.feeStructureId());
+			redirect.addFlashAttribute("message", "Fee structure linked to grade successfully. The change applies to future invoice generation.");
+		} catch (RuntimeException ex) {
+			redirect.addFlashAttribute("error", ex.getMessage());
 		}
+		return "redirect:/billing/grade-fee-structures";
 	}
 
-	@GetMapping("/grade-fee-structures/{gradeId}/history")
-	public String assignmentHistory(@PathVariable Long gradeId, Model model) {
-		model.addAttribute("assignments", feeService.assignmentHistory(gradeId));
-		model.addAttribute("gradeId", gradeId);
-		return "billing/grade-fee-structure-history";
-	}
 
 	@GetMapping("/invoices")
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	public String invoices(@RequestParam(required = false) String q, @RequestParam(defaultValue = "0") int page,
 			Model model) {
-		Page<com.discover.app.billing.domain.Invoice> result = service.searchIssued(q, page);
+		Page<InvoiceListRow> result = service.searchIssuedForView(q, page);
 		model.addAttribute("page", result);
 		model.addAttribute("query", q == null ? "" : q);
 		model.addAttribute("activeYear", years.getActive());
@@ -179,6 +166,8 @@ public class BillingWebController {
 		model.addAttribute("invoice", service.detail(id));
 		model.addAttribute("discountRequest", new DiscountRequestForm(null, null, ""));
 		model.addAttribute("cancellationRequest", new CancellationRequestForm(""));
+		model.addAttribute("existingDiscountRequest", service.discountRequestForInvoice(id).orElse(null));
+		model.addAttribute("latestCancellationRequest", service.latestCancellationRequestForInvoice(id).orElse(null));
 		return "billing/invoice-detail";
 	}
 
@@ -221,37 +210,43 @@ public class BillingWebController {
 
 	@GetMapping("/generate")
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-	public String generateForm(Model model) {
+	public String generateForm(@RequestParam(required = false) Long gradeId, @RequestParam(required = false) LocalDate billingMonth,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, Model model, HttpSession session) {
 		model.addAttribute("activeYear", years.requireActive());
 		model.addAttribute("grades", service.allGrades());
-		if (!model.containsAttribute("billingMonth"))
-			model.addAttribute("billingMonth", LocalDate.now().withDayOfMonth(1));
+		model.addAttribute("selectedGradeId", gradeId);
+		model.addAttribute("billingMonth", billingMonth == null ? LocalDate.now().withDayOfMonth(1) : billingMonth);
+		@SuppressWarnings("unchecked")
+		List<InvoiceGenerationLog> logs = (List<InvoiceGenerationLog>) session.getAttribute("generationLogs");
+		model.addAttribute("generationPage", paginateLogs(logs == null ? List.of() : logs, page, size));
 		return "billing/invoice-generation";
 	}
 
-	@PostMapping("/generate/all")
+	@PostMapping("/generate")
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-	public String generateAll(@RequestParam LocalDate billingMonth, Authentication auth, RedirectAttributes redirect) {
+	public String generate(@RequestParam Long gradeId, @RequestParam LocalDate billingMonth, Authentication auth, Model model, HttpSession session) {
 		try {
-			int n = service.generateForAllGrades(billingMonth, auth.getName());
-			redirect.addFlashAttribute("message", n + " invoice(s) generated for the active academic year.");
+			List<InvoiceGenerationLog> logs = service.generateForGrade(gradeId, billingMonth, auth.getName());
+			session.setAttribute("generationLogs", logs);
+			model.addAttribute("message", "Invoice generation completed.");
+			model.addAttribute("generationPage", paginateLogs(logs, 0, 10));
 		} catch (RuntimeException ex) {
-			redirect.addFlashAttribute("error", ex.getMessage());
+			model.addAttribute("error", ex.getMessage());
+			model.addAttribute("generationPage", Page.empty());
 		}
-		return "redirect:/billing/generate";
+		model.addAttribute("activeYear", years.requireActive());
+		model.addAttribute("grades", service.allGrades());
+		model.addAttribute("selectedGradeId", gradeId);
+		model.addAttribute("billingMonth", billingMonth);
+		return "billing/invoice-generation";
 	}
 
-	@PostMapping("/generate/grade")
-	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-	public String generateGrade(@RequestParam Long gradeId, @RequestParam LocalDate billingMonth, Authentication auth,
-			RedirectAttributes redirect) {
-		try {
-			int n = service.generateForGrade(gradeId, billingMonth, auth.getName());
-			redirect.addFlashAttribute("message", n + " invoice(s) generated for the selected grade.");
-		} catch (RuntimeException ex) {
-			redirect.addFlashAttribute("error", ex.getMessage());
-		}
-		return "redirect:/billing/generate";
+	private Page<InvoiceGenerationLog> paginateLogs(List<InvoiceGenerationLog> logs, int page, int size) {
+		int safeSize = Math.min(Math.max(size, 5), 50);
+		int safePage = Math.max(0, page);
+		int from = Math.min(safePage * safeSize, logs.size());
+		int to = Math.min(from + safeSize, logs.size());
+		return new org.springframework.data.domain.PageImpl<>(logs.subList(from, to), PageRequest.of(safePage, safeSize), logs.size());
 	}
 
 	@GetMapping("/approval/discount-requests")

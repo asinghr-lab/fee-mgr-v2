@@ -1,0 +1,84 @@
+package com.discover.app.collection.domain;
+
+import com.discover.app.billing.domain.Invoice;
+import com.discover.app.identity.domain.User;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "payments", uniqueConstraints = @UniqueConstraint(name = "uk_payment_invoice", columnNames = "invoice_id"), indexes = {
+		@Index(name = "idx_payment_paid_at", columnList = "paid_at") })
+public class Payment {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	@Column(name = "receipt_number", nullable = false, length = 40, unique = true)
+	private String receiptNumber;
+	@OneToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "invoice_id", nullable = false, unique = true)
+	private Invoice invoice;
+	@Column(nullable = false, precision = 12, scale = 2)
+	private BigDecimal amount;
+	@Column(name = "paid_at", nullable = false)
+	private LocalDateTime paidAt;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "recorded_by_user_id", nullable = false)
+	private User recordedBy;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private PaymentStatus status = PaymentStatus.RECORDED;
+	@Column(length = 500)
+	private String notes;
+
+	protected Payment() {
+	}
+
+	public Payment(String receiptNumber, Invoice invoice, BigDecimal amount, LocalDateTime paidAt, User recordedBy,
+			String notes) {
+		this.receiptNumber = receiptNumber;
+		this.invoice = invoice;
+		this.amount = amount;
+		this.paidAt = paidAt;
+		this.recordedBy = recordedBy;
+		this.notes = notes;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public String getReceiptNumber() {
+		return receiptNumber;
+	}
+
+	public Invoice getInvoice() {
+		return invoice;
+	}
+
+	public BigDecimal getAmount() {
+		return amount;
+	}
+
+	public LocalDateTime getPaidAt() {
+		return paidAt;
+	}
+
+	public User getRecordedBy() {
+		return recordedBy;
+	}
+
+	public PaymentStatus getStatus() {
+		return status;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void cancel() {
+		if (status == PaymentStatus.CANCELLED)
+			throw new IllegalStateException("Payment is already cancelled.");
+		status = PaymentStatus.CANCELLED;
+	}
+}

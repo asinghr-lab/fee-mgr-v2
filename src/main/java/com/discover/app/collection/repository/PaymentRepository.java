@@ -1,0 +1,22 @@
+package com.discover.app.collection.repository;
+
+import com.discover.app.collection.domain.*;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
+import java.time.*;
+import java.util.*;
+
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+	boolean existsByInvoiceIdAndStatus(Long invoiceId, PaymentStatus status);
+
+	@Query("select p from Payment p join fetch p.invoice i join fetch i.studentEnrollment e join fetch e.student s join fetch e.grade g join fetch i.academicYear y join fetch p.recordedBy u where p.status=:status and i.academicYear.id=:yearId and (:term is null or lower(s.admissionNumber) like lower(concat('%',:term,'%')) or lower(s.phoneNumber) like lower(concat('%',:term,'%'))) order by p.paidAt desc")
+	Page<Payment> search(@Param("status") PaymentStatus status, @Param("yearId") Long yearId,
+			@Param("term") String term, Pageable pageable);
+
+	@Query("select p from Payment p join fetch p.invoice i join fetch i.studentEnrollment e join fetch e.student s join fetch e.grade g join fetch i.academicYear y where p.status=:status and p.paidAt>=:from and p.paidAt<:to order by p.paidAt desc")
+	List<Payment> findBetween(@Param("status") PaymentStatus status, @Param("from") LocalDateTime from,
+			@Param("to") LocalDateTime to);
+
+	Optional<Payment> findByInvoiceId(Long invoiceId);
+}

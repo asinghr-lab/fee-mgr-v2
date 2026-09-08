@@ -1,1 +1,50 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/base}"><head><title>Grade Fee Structures</title></head><body><main layout:fragment="content"><div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3"><div><div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div><h1 class="page-title h3 mb-1">Grade Fee Structures</h1><p class="text-secondary mb-0">Historical Grade → Fee Structure assignments with effective dates.</p></div><a class="btn btn-primary" th:href="@{/billing/grade-fee-structures/new}"><i class="bi bi-link-45deg me-1"></i>Assign Structure</a></div><div th:if="${message}" class="alert alert-success"><i class="bi bi-check-circle me-2"></i><span th:text="${message}"></span></div><div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span></div><div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Grade</th><th>Fee Structure</th><th>Effective From</th><th>Effective To</th><th>Status</th><th></th></tr></thead><tbody><tr th:each="a:${assignments}"><td class="fw-semibold" th:text="${a.grade.name}"></td><td th:text="${a.feeStructure.name}"></td><td th:text="${a.effectiveFrom}"></td><td th:text="${a.effectiveTo ?: '—'}"></td><td><span class="badge" th:classappend="${a.effectiveTo == null || !a.effectiveTo.isBefore(T(java.time.LocalDate).now())}?' text-bg-success':' text-bg-secondary'" th:text="${a.effectiveTo == null || !a.effectiveTo.isBefore(T(java.time.LocalDate).now())?'CURRENT':'HISTORICAL'}"></span></td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" th:href="@{/billing/grade-fee-structures/{id}/history(id=${a.grade.id})}"><i class="bi bi-clock-history me-1"></i>History</a></td></tr><tr th:if="${#lists.isEmpty(assignments)}"><td colspan="6" class="text-center py-5 text-secondary">No grade fee-structure assignments yet.</td></tr></tbody></table></div></div></div></main></body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{layouts/base}">
+<head><title>Grade Fee Structures</title></head>
+<body>
+<main layout:fragment="content">
+	<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+		<div>
+			<div class="text-uppercase small fw-bold text-primary">Billing / Fee Configuration</div>
+			<h1 class="page-title h3 mb-1">Grade Fee Structures</h1>
+			<p class="text-secondary mb-0">Current fee structure linked to each active grade.</p>
+		</div>
+	</div>
+	<div th:if="${message}" class="alert alert-success"><i class="bi bi-check-circle me-2"></i><span th:text="${message}"></span></div>
+	<div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span></div>
+	<div class="alert alert-light border"><i class="bi bi-info-circle me-2 text-primary"></i>Only ACTIVE fee structures can be selected. A change applies to future invoice generation; existing invoices are unchanged.</div>
+	<div class="card">
+		<div class="table-responsive">
+			<table class="table table-hover align-middle mb-0">
+				<thead><tr><th>Grade</th><th>Linked Fee Structure</th><th class="text-end">Action</th></tr></thead>
+				<tbody>
+				<tr th:each="a : ${assignments}">
+					<td class="fw-semibold" th:text="${a.gradeName}"></td>
+					<td th:if="${a.feeStructureId == null}" class="text-muted">Not Linked</td>
+					<td th:if="${a.feeStructureId != null}">
+						<span th:text="${a.feeStructureName}"></span>
+						<span class="badge text-bg-success ms-2">ACTIVE</span>
+					</td>
+					<td class="text-end">
+						<div class="d-flex justify-content-end gap-2 align-items-center">
+							<form sec:authorize="hasRole('ADMIN')" th:action="@{/billing/grade-fee-structures/{gradeId}(gradeId=${a.gradeId})}" method="post" class="d-flex gap-2">
+								<select class="form-select form-select-sm" name="feeStructureId" required>
+									<option value="">Select Fee Structure</option>
+									<option th:each="fs : ${structures}" th:value="${fs.id}" th:selected="${a.feeStructureId != null and a.feeStructureId == fs.id}" th:text="${fs.name}"></option>
+								</select>
+								<button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-save me-1"></i>Save</button>
+							</form>
+							<span sec:authorize="hasRole('STAFF')" class="text-muted small">View only</span>
+							
+						</div>
+					</td>
+				</tr>
+				<tr th:if="${#lists.isEmpty(assignments)}"><td colspan="3" class="text-center py-5 text-muted">No grades found.</td></tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</main>
+</body>
+</html>

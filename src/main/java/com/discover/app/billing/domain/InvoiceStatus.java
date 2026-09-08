@@ -1,2 +1,5 @@
 package com.discover.app.billing.domain;
-public enum InvoiceStatus { ISSUED, CANCELLED }
+
+public enum InvoiceStatus {
+    DRAFT, ISSUED, PAID, CANCELLED
+}

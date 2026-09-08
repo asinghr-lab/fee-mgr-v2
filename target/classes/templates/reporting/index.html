@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<body>
+	<section layout:fragment="content">
+		<div class="page-header">
+			<div class="text-uppercase small text-primary fw-bold">Reporting</div>
+			<h1 class="page-title h3">Reports</h1>
+			<p class="text-muted">All reports use the system active academic year: <b th:text="${year.name}"></b></p>
+		</div>
+		<div class="row g-3">
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none" th:href="@{/reporting/yearly}">
+					<div class="card-body"><i class="bi bi-bar-chart-fill fs-2 text-primary"></i>
+						<h2 class="h5 mt-3">Yearly Collection</h2>
+						<p class="text-muted">School → Grade → Student yearly collection drill-down.</p>
+					</div>
+				</a></div>
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none"
+					th:href="@{/reporting/pending-fee}">
+					<div class="card-body"><i class="bi bi-exclamation-circle fs-2 text-warning"></i>
+						<h2 class="h5 mt-3">Pending Fee</h2>
+						<p class="text-muted">Students with outstanding ISSUED invoices.</p>
+					</div>
+				</a></div>
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none"
+					th:href="@{/reporting/late?late=true}">
+					<div class="card-body"><i class="bi bi-clock-history fs-2 text-danger"></i>
+						<h2 class="h5 mt-3">Late Payments</h2>
+						<p class="text-muted">Students with payments after invoice due date.</p>
+					</div>
+				</a></div>
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none"
+					th:href="@{/reporting/late?late=false}">
+					<div class="card-body"><i class="bi bi-check-circle fs-2 text-success"></i>
+						<h2 class="h5 mt-3">On-time Payers</h2>
+						<p class="text-muted">Students with no late recorded payments.</p>
+					</div>
+				</a></div>
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none"
+					th:href="@{/reporting/repeat-late}">
+					<div class="card-body"><i class="bi bi-person-exclamation fs-2 text-danger"></i>
+						<h2 class="h5 mt-3">Repeat Late Payments</h2>
+						<p class="text-muted">Default threshold: at least one late payment.</p>
+					</div>
+				</a></div>
+		</div>
+		<div class="row g-3 mt-1">
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none" th:href="@{/reporting/monthly}">
+					<div class="card-body"><i class="bi bi-calendar3 fs-2 text-primary"></i>
+						<h2 class="h5 mt-3">Monthly Report</h2>
+						<p class="text-muted">Grade-wise monthly invoicing, discounts and collection.</p>
+					</div>
+				</a></div>
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none"
+					th:href="@{/reporting/admissions/new}">
+					<div class="card-body"><i class="bi bi-person-plus fs-2 text-primary"></i>
+						<h2 class="h5 mt-3">New Admissions</h2>
+					</div>
+				</a></div>
+			<div class="col-md-6 col-xl-4"><a class="card h-100 text-decoration-none"
+					th:href="@{/reporting/promotions}">
+					<div class="card-body"><i class="bi bi-arrow-up-circle fs-2 text-primary"></i>
+						<h2 class="h5 mt-3">Grade Progression</h2>
+					</div>
+				</a></div>
+		</div>
+	</section>
+</body>
+
+</html>

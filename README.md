@@ -150,3 +150,38 @@ Run with JDK 17 and Maven:
 
 Default identity users are inherited from Phase 1.
 
+# Phase 5 Enhancements
+
+Baseline: fee-mgr-v2-phase5-invoice-lazy-fix-v2.zip
+
+Implemented:
+
+1. Enrollments page
+   - ADMIN and STAFF can filter enrollments by Grade.
+   - Grade filter contains the application's current Grades.
+   - Pagination preserves the selected Grade.
+
+2. Grade Fee Structures
+   - ADMIN and STAFF can view the current Grade -> Fee Structure links.
+   - ADMIN can change the linked Fee Structure inline using a dropdown.
+   - Only ACTIVE FeeStructures are offered in the dropdown.
+   - STAFF is view-only on this page.
+   - Changes create a new effective assignment for future invoice generation; existing invoices are unchanged.
+   - Existing historical assignment view is retained.
+
+3. Invoice lifecycle and request audit
+   - Invoice statuses: DRAFT, ISSUED, PAID, CANCELLED.
+   - Creating a DiscountRequest moves ISSUED -> DRAFT.
+   - Creating a CancellationRequest moves ISSUED -> DRAFT.
+   - DRAFT blocks both new request types and payment.
+   - A DiscountRequest is allowed only once during an Invoice lifetime.
+   - CancellationRequests can be created repeatedly, but only while the Invoice is ISSUED; a pending request must first be resolved.
+   - Approved DiscountRequest: DRAFT -> ISSUED and discount is applied.
+   - Rejected DiscountRequest: DRAFT -> ISSUED.
+   - Approved CancellationRequest: DRAFT -> CANCELLED.
+   - Rejected CancellationRequest: DRAFT -> ISSUED.
+   - Payment is accepted only for ISSUED invoices and must equal Invoice net amount; successful payment changes ISSUED -> PAID.
+   - PAID/CANCELLED invoices cannot be modified or paid.
+   - Invoice Details displays full DiscountRequest audit and the latest CancellationRequest audit.
+   - Reporting excludes DRAFT invoices from finalized financial totals and treats ISSUED/PAID as reportable.
+   - Invoice generation treats DRAFT/ISSUED/PAID invoices as blocking duplicates, while CANCELLED invoices can be regenerated under the existing generation rules.
