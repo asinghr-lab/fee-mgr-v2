@@ -54,9 +54,27 @@ public class Invoice {
 		item.attachTo(this);
 	}
 
+	public void markDraft() {
+		if (status != InvoiceStatus.ISSUED)
+			throw new IllegalStateException("Only ISSUED invoices can be moved to DRAFT.");
+		status = InvoiceStatus.DRAFT;
+	}
+
+	public void issue() {
+		if (status != InvoiceStatus.DRAFT)
+			throw new IllegalStateException("Only DRAFT invoices can be returned to ISSUED.");
+		status = InvoiceStatus.ISSUED;
+	}
+
+	public void markPaid() {
+		if (status != InvoiceStatus.ISSUED)
+			throw new IllegalStateException("Only ISSUED invoices can be marked PAID.");
+		status = InvoiceStatus.PAID;
+	}
+
 	public void cancel() {
-		if (status == InvoiceStatus.CANCELLED)
-			throw new IllegalStateException("Invoice is already cancelled.");
+		if (status != InvoiceStatus.DRAFT)
+			throw new IllegalStateException("Only DRAFT invoices can be cancelled.");
 		status = InvoiceStatus.CANCELLED;
 	}
 

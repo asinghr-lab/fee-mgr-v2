@@ -95,7 +95,7 @@ public class FeeConfigurationService {
 	}
 
 	@Transactional
-	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public GradeFeeStructure assignToGrade(Long gradeId, Long structureId, LocalDate effectiveFrom) {
 		Grade grade = grades.findById(gradeId).orElseThrow(() -> new IllegalArgumentException("Grade not found."));
 		FeeStructure structure = structures.findById(structureId)
@@ -112,6 +112,19 @@ public class FeeConfigurationService {
 			current.closeOn(date.minusDays(1));
 		});
 		return assignments.save(new GradeFeeStructure(grade, structure, date));
+	}
+
+	@PreAuthorize("isAuthenticated()")
+	@Transactional
+	public List<GradeFeeStructureRow> currentAssignments() {
+		LocalDate today = LocalDate.now();
+		Map<Long, GradeFeeStructure> current = assignments.findAllActiveOn(today).stream()
+				.collect(Collectors.toMap(a -> a.getGrade().getId(), a -> a, (a, b) -> a));
+		return allGrades().stream().map(grade -> {
+			GradeFeeStructure a = current.get(grade.getId());
+			return new GradeFeeStructureRow(grade.getId(), grade.getName(), a == null ? null : a.getFeeStructure().getId(),
+					a == null ? null : a.getFeeStructure().getName(), a == null ? null : a.getEffectiveFrom());
+		}).toList();
 	}
 
 	@PreAuthorize("isAuthenticated()")

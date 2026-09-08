@@ -17,6 +17,21 @@
 			<a class="btn btn-outline-secondary" th:href="@{/school/students}"><i
 					class="bi bi-people me-1"></i>Students</a>
 		</div>
+		<div class="card mb-4">
+			<div class="card-body">
+				<form method="get" th:action="@{/school/enrollments}" class="row g-3 align-items-end">
+					<div class="col-md-5">
+						<label class="form-label" for="gradeId">Filter by Grade</label>
+						<select class="form-select" id="gradeId" name="gradeId">
+							<option value="">All Grades</option>
+							<option th:each="g : ${grades}" th:value="${g.id}" th:selected="${selectedGradeId != null and selectedGradeId == g.id}" th:text="${g.name}"></option>
+						</select>
+					</div>
+					<div class="col-auto"><button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-1"></i>Filter</button></div>
+					<div class="col-auto"><a class="btn btn-outline-secondary" th:href="@{/school/enrollments}"><i class="bi bi-x-circle me-1"></i>Clear</a></div>
+				</form>
+			</div>
+		</div>
 		<div class="card">
 			<div class="card-header p-3">
 				<h2 class="h6 mb-0"><i class="bi bi-journal-check me-2 text-primary"></i>Enrollment Directory</h2>
@@ -66,15 +81,15 @@
 					<ul class="pagination pagination-sm mb-0">
 						<li class="page-item" th:classappend="${enrollmentPage.first ? 'disabled' : ''}"><a
 								class="page-link"
-								th:href="@{/school/enrollments(page=${enrollmentPage.number - 1},size=${enrollmentPage.size})}">Previous</a>
+								th:href="@{/school/enrollments(page=${enrollmentPage.number - 1},size=${enrollmentPage.size},gradeId=${selectedGradeId})}">Previous</a>
 						</li>
 						<li class="page-item" th:each="p : ${#numbers.sequence(0, enrollmentPage.totalPages - 1)}"
 							th:classappend="${p == enrollmentPage.number ? 'active' : ''}"><a class="page-link"
-								th:href="@{/school/enrollments(page=${p},size=${enrollmentPage.size})}"
+								th:href="@{/school/enrollments(page=${p},size=${enrollmentPage.size},gradeId=${selectedGradeId})}"
 								th:text="${p + 1}"></a></li>
 						<li class="page-item" th:classappend="${enrollmentPage.last ? 'disabled' : ''}"><a
 								class="page-link"
-								th:href="@{/school/enrollments(page=${enrollmentPage.number + 1},size=${enrollmentPage.size})}">Next</a>
+								th:href="@{/school/enrollments(page=${enrollmentPage.number + 1},size=${enrollmentPage.size},gradeId=${selectedGradeId})}">Next</a>
 						</li>
 					</ul>
 				</nav>

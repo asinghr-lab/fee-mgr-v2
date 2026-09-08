@@ -24,7 +24,7 @@
 				<div class="card">
 					<div class="card-header d-flex justify-content-between"><span>Invoice Details</span><span
 							class="badge"
-							th:classappend="${invoice.status.name()=='ISSUED'?'text-bg-success':'text-bg-secondary'}"
+							th:classappend="${invoice.status.name()=='ISSUED' || invoice.status.name()=='PAID' ? 'text-bg-success' : (invoice.status.name()=='DRAFT' ? 'text-bg-warning' : 'text-bg-secondary')}"
 							th:text="${invoice.status}"></span></div>
 					<div class="table-responsive">
 						<table class="table align-middle mb-0">
@@ -59,35 +59,56 @@
 				</div>
 			</div>
 			<div class="col-xl-4">
-				<div class="card mb-4">
+				<div class="card mb-4" th:if="${invoice.status.name() == 'ISSUED' and existingDiscountRequest == null}">
 					<div class="card-header"><i class="bi bi-percent me-2"></i>Request Discount</div>
 					<div class="card-body">
 						<form th:action="@{'/billing/invoices/' + ${invoice.id} + '/discount-requests'}" method="post">
 							<div class="mb-3"><label class="form-label">Fee Component</label><select class="form-select"
-									name="invoiceItemId" required>
-									<option value="">Select</option>
-									<option th:each="i:${invoice.items}" th:value="${i.id}"
-										th:text="${i.feeComponentName + ' — Net ' + i.netAmount}"></option>
-								</select></div>
+								name="invoiceItemId" required>
+								<option value="">Select</option>
+								<option th:each="i:${invoice.items}" th:value="${i.id}"
+									th:text="${i.feeComponentName + ' — Net ' + i.netAmount}"></option>
+							</select></div>
 							<div class="mb-3"><label class="form-label">Requested Discount</label><input
-									class="form-control" type="number" name="requestedAmount" min="0.01" step="0.01"
-									required></div>
+								class="form-control" type="number" name="requestedAmount" min="0.01" step="0.01" required></div>
 							<div class="mb-3"><label class="form-label">Reason</label><textarea class="form-control"
-									name="reason" rows="3" maxlength="500" required></textarea></div><button
+								name="reason" rows="3" maxlength="500" required></textarea></div><button
 								class="btn btn-primary w-100"><i class="bi bi-send me-1"></i>Submit Request</button>
 						</form>
 					</div>
 				</div>
-				<div class="card">
+
+				<div class="card mb-4" th:if="${invoice.status.name() == 'ISSUED'}">
 					<div class="card-header text-danger"><i class="bi bi-x-circle me-2"></i>Request Cancellation</div>
 					<div class="card-body">
-						<form th:action="@{'/billing/invoices/' + ${invoice.id} + '/cancellation-requests'}"
-							method="post">
-							<div class="mb-3"><label class="form-label">Reason</label><textarea class="form-control"
-									name="reason" rows="3" maxlength="500" required></textarea></div><button
-								class="btn btn-outline-danger w-100"><i class="bi bi-send me-1"></i>Submit Cancellation
-								Request</button>
+						<form th:action="@{'/billing/invoices/' + ${invoice.id} + '/cancellation-requests'}" method="post">
+							<div class="mb-3"><label class="form-label">Reason</label><textarea class="form-control" name="reason" rows="3" maxlength="500" required></textarea></div>
+							<button class="btn btn-outline-danger w-100"><i class="bi bi-send me-1"></i>Submit Cancellation Request</button>
 						</form>
+					</div>
+				</div>
+
+				<div class="card mb-4" th:if="${existingDiscountRequest != null}">
+					<div class="card-header"><i class="bi bi-percent me-2"></i>Discount Request Audit</div>
+					<div class="card-body small">
+						<div class="row g-2"><div class="col-5 text-muted">Requested By</div><div class="col-7" th:text="${existingDiscountRequest.requestedBy.username}"></div>
+						<div class="col-5 text-muted">Requested On</div><div class="col-7" th:text="${#temporals.format(existingDiscountRequest.createdAt,'dd MMM yyyy HH:mm')}"></div>
+						<div class="col-5 text-muted">Requested Amount</div><div class="col-7 fw-semibold" th:text="${existingDiscountRequest.totalRequested}"></div>
+						<div class="col-5 text-muted">Status</div><div class="col-7"><span class="badge text-bg-warning" th:text="${existingDiscountRequest.status}"></span></div>
+						<div class="col-5 text-muted" th:if="${existingDiscountRequest.decidedBy != null}">Decided By</div><div class="col-7" th:if="${existingDiscountRequest.decidedBy != null}" th:text="${existingDiscountRequest.decidedBy.username}"></div>
+						<div class="col-5 text-muted" th:if="${existingDiscountRequest.approvedAt != null}">Decided On</div><div class="col-7" th:if="${existingDiscountRequest.approvedAt != null}" th:text="${#temporals.format(existingDiscountRequest.approvedAt,'dd MMM yyyy HH:mm')}"></div></div>
+					</div>
+				</div>
+
+				<div class="card" th:if="${latestCancellationRequest != null}">
+					<div class="card-header"><i class="bi bi-x-circle me-2 text-danger"></i>Latest Cancellation Request</div>
+					<div class="card-body small">
+						<div class="row g-2"><div class="col-5 text-muted">Requested By</div><div class="col-7" th:text="${latestCancellationRequest.requestedBy.username}"></div>
+						<div class="col-5 text-muted">Requested On</div><div class="col-7" th:text="${#temporals.format(latestCancellationRequest.createdAt,'dd MMM yyyy HH:mm')}"></div>
+						<div class="col-5 text-muted">Reason</div><div class="col-7" th:text="${latestCancellationRequest.reason}"></div>
+						<div class="col-5 text-muted">Status</div><div class="col-7"><span class="badge text-bg-warning" th:text="${latestCancellationRequest.status}"></span></div>
+						<div class="col-5 text-muted" th:if="${latestCancellationRequest.decidedBy != null}">Decided By</div><div class="col-7" th:if="${latestCancellationRequest.decidedBy != null}" th:text="${latestCancellationRequest.decidedBy.username}"></div>
+						<div class="col-5 text-muted" th:if="${latestCancellationRequest.decidedAt != null}">Decided On</div><div class="col-7" th:if="${latestCancellationRequest.decidedAt != null}" th:text="${#temporals.format(latestCancellationRequest.decidedAt,'dd MMM yyyy HH:mm')}"></div></div>
 					</div>
 				</div>
 			</div>

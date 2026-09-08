@@ -29,4 +29,26 @@ class BillingDomainTests {
         assertThat(a.isActiveOn(LocalDate.of(2026,4,1))).isTrue();
         assertThat(a.isActiveOn(LocalDate.of(2027,3,31))).isTrue();
     }
+    @Test void invoiceLifecycleSupportsDraftIssuedPaidAndCancelled() {
+        var invoice = new Invoice("INV-TEST", null, null, LocalDate.of(2026, 4, 1),
+                java.time.LocalDateTime.of(2026, 4, 1, 9, 0), LocalDate.of(2026, 4, 10));
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.ISSUED);
+        invoice.markDraft();
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.DRAFT);
+        invoice.issue();
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.ISSUED);
+        invoice.markPaid();
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.PAID);
+    }
+
+    @Test void invoiceCanBeCancelledOnlyAfterDraft() {
+        var invoice = new Invoice("INV-TEST-2", null, null, LocalDate.of(2026, 4, 1),
+                java.time.LocalDateTime.of(2026, 4, 1, 9, 0), LocalDate.of(2026, 4, 10));
+        assertThatThrownBy(invoice::cancel).isInstanceOf(IllegalStateException.class);
+        invoice.markDraft();
+        invoice.cancel();
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.CANCELLED);
+    }
+
 }
+

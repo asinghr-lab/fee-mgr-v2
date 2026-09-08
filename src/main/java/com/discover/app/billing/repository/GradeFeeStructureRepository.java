@@ -3,6 +3,7 @@ package com.discover.app.billing.repository;
 import com.discover.app.billing.domain.*;
 import com.discover.app.school.domain.Grade;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -17,4 +18,7 @@ public interface GradeFeeStructureRepository extends JpaRepository<GradeFeeStruc
 	List<GradeFeeStructure> findActiveForGradeId(Long gradeId, LocalDate onDate);
 
 	List<GradeFeeStructure> findByGradeOrderByEffectiveFromDescIdDesc(Grade grade);
+
+	@Query("select g from GradeFeeStructure g join fetch g.grade gr join fetch g.feeStructure fs where g.effectiveFrom <= :onDate and (g.effectiveTo is null or g.effectiveTo >= :onDate) order by gr.displayOrder asc, gr.name asc, g.effectiveFrom desc, g.id desc")
+	List<GradeFeeStructure> findAllActiveOn(@Param("onDate") LocalDate onDate);
 }

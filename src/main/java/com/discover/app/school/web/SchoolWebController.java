@@ -156,12 +156,14 @@ public class SchoolWebController {
 
 	@GetMapping("/enrollments")
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-	public String enrollmentList(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size, Model model) {
+	public String enrollmentList(@RequestParam(required = false) Long gradeId,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, Model model) {
 		int safePage = Math.max(0, page);
 		int safeSize = Math.min(Math.max(size, 5), 50);
-		Page<?> enrollmentPage = enrollments.findAll(PageRequest.of(safePage, safeSize));
+		Page<?> enrollmentPage = enrollments.findAllByGrade(gradeId, PageRequest.of(safePage, safeSize));
 		model.addAttribute("enrollmentPage", enrollmentPage);
+		model.addAttribute("grades", grades.findAll());
+		model.addAttribute("selectedGradeId", gradeId);
 		return "school/enrollments";
 	}
 

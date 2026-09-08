@@ -18,6 +18,15 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 	boolean existsByStudentEnrollmentIdAndAcademicYearIdAndStatusAndBillingMonthAndItems_Frequency(Long enrollmentId,
 			Long yearId, InvoiceStatus status, LocalDate billingMonth, FeeFrequency frequency);
 
+	@Query("select count(i) from Invoice i join i.items item where i.academicYear.id=:yearId and i.studentEnrollment.id=:enrollmentId and i.status in :statuses and i.billingMonth=:billingMonth and item.frequency=:frequency")
+	long countByEnrollmentYearStatusesBillingMonthAndFrequency(@Param("enrollmentId") Long enrollmentId,
+			@Param("yearId") Long yearId, @Param("statuses") Collection<InvoiceStatus> statuses,
+			@Param("billingMonth") LocalDate billingMonth, @Param("frequency") FeeFrequency frequency);
+
+	@Query("select count(i) from Invoice i where i.academicYear.id=:yearId and i.studentEnrollment.id=:enrollmentId and i.status in :statuses and i.billingMonth=:billingMonth")
+	long countMonthlyPeriodByStatuses(@Param("yearId") Long yearId, @Param("studentEnrollmentId") Long enrollmentId,
+			@Param("statuses") Collection<InvoiceStatus> statuses, @Param("billingMonth") LocalDate billingMonth);
+
 	@Query("select i from Invoice i join fetch i.studentEnrollment e join fetch e.student s join fetch e.grade g join fetch i.academicYear y left join fetch i.items where i.academicYear.id=:yearId and i.studentEnrollment.id=:enrollmentId and i.status=:status order by i.generationDate desc, i.id desc")
 	List<Invoice> findForStudentYear(@Param("enrollmentId") Long enrollmentId, @Param("yearId") Long yearId,
 			@Param("status") InvoiceStatus status);

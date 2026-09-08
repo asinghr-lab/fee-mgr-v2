@@ -41,4 +41,10 @@ public class GradeService {
 		g.update(name, order);
 		return g;
 	}
+	
+	@Transactional(readOnly = true)
+	public List<Grade> findAllByOrderByDisplayOrderAscNameAsc() {
+	    return grades.findAllByOrderByDisplayOrderAscNameAsc();
+	}
+	
 }

@@ -121,13 +121,33 @@ public class BillingWebController {
 	}
 
 	@GetMapping("/grade-fee-structures")
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	public String assignments(Model model) {
-		model.addAttribute("assignments", feeService.assignments());
+		model.addAttribute("assignments", feeService.currentAssignments());
+		model.addAttribute("structures", feeService.activeStructures());
 		return "billing/grade-fee-structures";
 	}
 
+	@PostMapping("/grade-fee-structures/{gradeId}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public String changeGradeFeeStructure(@PathVariable Long gradeId,
+			@Valid @ModelAttribute("request") GradeFeeStructureChangeRequest request, BindingResult result,
+			RedirectAttributes redirect) {
+		if (result.hasErrors()) {
+			redirect.addFlashAttribute("error", "Please select an active fee structure.");
+			return "redirect:/billing/grade-fee-structures";
+		}
+		try {
+			feeService.assignToGrade(gradeId, request.feeStructureId(), LocalDate.now());
+			redirect.addFlashAttribute("message", "Fee structure linked to grade successfully. The change applies to future invoice generation.");
+		} catch (RuntimeException ex) {
+			redirect.addFlashAttribute("error", ex.getMessage());
+		}
+		return "redirect:/billing/grade-fee-structures";
+	}
+
 	@GetMapping("/grade-fee-structures/new")
-	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public String assignmentForm(Model model) {
 		model.addAttribute("grades", feeService.allGrades());
 		model.addAttribute("structures", feeService.activeStructures());
@@ -136,7 +156,7 @@ public class BillingWebController {
 	}
 
 	@PostMapping("/grade-fee-structures")
-	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public String assign(@Valid @ModelAttribute("request") GradeFeeStructureRequest request, BindingResult result,
 			Model model, RedirectAttributes redirect) {
 		if (result.hasErrors()) {
@@ -180,6 +200,8 @@ public class BillingWebController {
 		model.addAttribute("invoice", service.detail(id));
 		model.addAttribute("discountRequest", new DiscountRequestForm(null, null, ""));
 		model.addAttribute("cancellationRequest", new CancellationRequestForm(""));
+		model.addAttribute("existingDiscountRequest", service.discountRequestForInvoice(id).orElse(null));
+		model.addAttribute("latestCancellationRequest", service.latestCancellationRequestForInvoice(id).orElse(null));
 		return "billing/invoice-detail";
 	}
 

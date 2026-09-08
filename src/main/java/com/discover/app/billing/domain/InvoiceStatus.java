@@ -1,5 +1,5 @@
 package com.discover.app.billing.domain;
 
 public enum InvoiceStatus {
-	ISSUED, CANCELLED
+    DRAFT, ISSUED, PAID, CANCELLED
 }

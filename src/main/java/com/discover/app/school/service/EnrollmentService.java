@@ -92,4 +92,14 @@ public class EnrollmentService {
 	public Page<StudentEnrollment> findAll(Pageable pageable) {
 		return enrollments.findAllByOrderByRequestDateDesc(pageable);
 	}
+
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional(readOnly = true)
+	public Page<StudentEnrollment> findAllByGrade(Long gradeId, Pageable pageable) {
+		if (gradeId == null)
+			return findAll(pageable);
+		if (!grades.existsById(gradeId))
+			throw new IllegalArgumentException("Grade not found.");
+		return enrollments.findAllByGradeIdOrderByRequestDateDesc(gradeId, pageable);
+	}
 }

@@ -20,7 +20,7 @@ body {
 .app-sidebar {
 	width: 260px;
 	min-height: calc(100vh - 62px);
-	background: var(--app-sidebar);
+	background: linear-gradient(180deg, var(--app-sidebar), var(--app-primary));
 	color: #dbe5ff
 }
 

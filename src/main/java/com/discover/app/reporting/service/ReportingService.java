@@ -52,20 +52,20 @@ public class ReportingService {
 		for (var e : map.keySet())
 			a.put(e, new BigDecimal[] { z(), z(), z(), z() });
 		for (var i : inv)
-			if (i.getStatus() != InvoiceStatus.CANCELLED && bucket(i, month)) {
+			if (isReportableInvoice(i) && bucket(i, month)) {
 				var x = a.computeIfAbsent(i.getStudentEnrollment().getGrade().getId(),
 						k -> new BigDecimal[] { z(), z(), z(), z() });
 				x[0] = x[0].add(i.getOriginalAmount());
 				x[2] = x[2].add(i.getDiscountAmount());
 			}
 		for (var r : repo.discountRequests(y.getId()))
-			if (r.getInvoice().getStatus() != InvoiceStatus.CANCELLED && bucket(r.getInvoice(), month))
+			if (isReportableInvoice(r.getInvoice()) && bucket(r.getInvoice(), month))
 				a.computeIfAbsent(r.getInvoice().getStudentEnrollment().getGrade().getId(),
 						k -> new BigDecimal[] { z(), z(), z(), z() })[1] = a
 								.get(r.getInvoice().getStudentEnrollment().getGrade().getId())[1]
 								.add(r.getTotalRequested());
 		for (var p : pays)
-			if (p.getInvoice().getStatus() != InvoiceStatus.CANCELLED
+			if (isReportableInvoice(p.getInvoice())
 					&& p.getPaidAt().toLocalDate().getYear() == month.getYear()
 					&& p.getPaidAt().toLocalDate().getMonth() == month.getMonth()) {
 				var x = a.computeIfAbsent(p.getInvoice().getStudentEnrollment().getGrade().getId(),
@@ -95,7 +95,7 @@ public class ReportingService {
 		for (var e : m.keySet())
 			agg.put(e, new BigDecimal[] { z(), z(), z(), z(), z(), z() });
 		for (var i : invoices) {
-			if (i.getStatus() == InvoiceStatus.CANCELLED)
+			if (i.getStatus() == InvoiceStatus.CANCELLED || i.getStatus() == InvoiceStatus.DRAFT)
 				continue;
 			var a = agg.computeIfAbsent(i.getStudentEnrollment().getGrade().getId(),
 					k -> new BigDecimal[] { z(), z(), z(), z(), z(), z() });
@@ -104,7 +104,7 @@ public class ReportingService {
 		}
 		Map<Long, BigDecimal> collected = new HashMap<>();
 		for (var p : pays) {
-			if (p.getInvoice().getStatus() != InvoiceStatus.CANCELLED)
+			if (isReportableInvoice(p.getInvoice()))
 				collected.merge(p.getInvoice().getStudentEnrollment().getGrade().getId(), p.getAmount(),
 						BigDecimal::add);
 		}
@@ -131,12 +131,12 @@ public class ReportingService {
 				continue;
 			BigDecimal[] a = { z(), z(), z(), z(), z() };
 			for (var i : inv)
-				if (i.getStudentEnrollment().getId().equals(e.getId()) && i.getStatus() != InvoiceStatus.CANCELLED)
+				if (i.getStudentEnrollment().getId().equals(e.getId()) && isReportableInvoice(i))
 					for (var it : i.getItems())
 						a[idx(it.getFrequency())] = a[idx(it.getFrequency())].add(it.getNetAmount());
 			BigDecimal c = pays.stream()
 					.filter(p -> p.getInvoice().getStudentEnrollment().getId().equals(e.getId())
-							&& p.getInvoice().getStatus() != InvoiceStatus.CANCELLED)
+							&& isReportableInvoice(p.getInvoice()))
 					.map(Payment::getAmount).reduce(z(), BigDecimal::add);
 			BigDecimal due = Arrays.stream(a).reduce(z(), BigDecimal::add);
 			rows.add(new StudentYearRow(e.getId(), e.getStudent().getId(), e.getStudent().getFullName(),
@@ -161,7 +161,7 @@ public class ReportingService {
 			LocalDate mm = m.plusMonths(n);
 			BigDecimal iv = z(), rq = z(), ap = z(), c = z();
 			for (var i : inv)
-				if (i.getStudentEnrollment().getId().equals(e.getId()) && i.getStatus() != InvoiceStatus.CANCELLED
+				if (i.getStudentEnrollment().getId().equals(e.getId()) && isReportableInvoice(i)
 						&& bucket(i, mm)) {
 					iv = iv.add(i.getOriginalAmount());
 				}
@@ -219,14 +219,14 @@ public class ReportingService {
 		var pays = repo.payments(y.getId(), PaymentStatus.RECORDED);
 		Map<Long, Long> counts = new HashMap<>();
 		for (var p : pays)
-			if (p.getInvoice().getStatus() != InvoiceStatus.CANCELLED
+			if (isReportableInvoice(p.getInvoice())
 					&& p.getPaidAt().toLocalDate().isAfter(p.getInvoice().getDueDate()))
 				counts.merge(p.getInvoice().getStudentEnrollment().getId(), 1L, Long::sum);
 		List<LateRow> rows = new ArrayList<>();
 		for (var e : repo.enrollments(y.getId(), EnrollmentStatus.APPROVED)) {
 			long c = counts.getOrDefault(e.getId(), 0L);
 			long paid = pays.stream().filter(x -> x.getInvoice().getStudentEnrollment().getId().equals(e.getId())
-					&& x.getInvoice().getStatus() != InvoiceStatus.CANCELLED).count();
+					&& isReportableInvoice(x.getInvoice())).count();
 			if ((late && c > 0) || (!late && paid > 0 && c == 0))
 				rows.add(new LateRow(e.getId(), e.getStudent().getFullName(), e.getStudent().getAdmissionNumber(),
 						e.getGrade().getName(), c));
@@ -245,7 +245,7 @@ public class ReportingService {
 		var pays = repo.payments(y.getId(), PaymentStatus.RECORDED);
 		Map<Long, Long> counts = new HashMap<>();
 		for (var p : pays)
-			if (p.getInvoice().getStatus() != InvoiceStatus.CANCELLED
+			if (isReportableInvoice(p.getInvoice())
 					&& p.getPaidAt().toLocalDate().isAfter(p.getInvoice().getDueDate()))
 				counts.merge(p.getInvoice().getStudentEnrollment().getId(), 1L, Long::sum);
 		List<LateRow> rows = repo.enrollments(y.getId(), EnrollmentStatus.APPROVED).stream()
@@ -309,6 +309,10 @@ public class ReportingService {
 						e.getGrade().getName()))
 				.toList();
 		return page(rows, page, size);
+	}
+
+	private boolean isReportableInvoice(Invoice i) {
+		return i.getStatus() == InvoiceStatus.ISSUED || i.getStatus() == InvoiceStatus.PAID;
 	}
 
 	private boolean bucket(Invoice i, LocalDate m) {

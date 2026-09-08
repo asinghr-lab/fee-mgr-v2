@@ -47,4 +47,7 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
 	@EntityGraph(attributePaths = { "student", "academicYear", "grade", "requestedBy", "approvedBy" })
 	Page<StudentEnrollment> findAllByOrderByRequestDateDesc(Pageable pageable);
 
+	@EntityGraph(attributePaths = { "student", "academicYear", "grade", "requestedBy", "approvedBy" })
+	Page<StudentEnrollment> findAllByGradeIdOrderByRequestDateDesc(Long gradeId, Pageable pageable);
+
 }

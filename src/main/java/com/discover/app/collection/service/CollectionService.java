@@ -48,7 +48,9 @@ public class CollectionService {
 		if (paidAt.toLocalDate().isAfter(LocalDate.now()))
 			throw new IllegalArgumentException("Payment date cannot be in the future.");
 		User u = users.findByUsername(username).orElseThrow();
-		return payments.save(new Payment(nextReceiptNumber(paidAt), invoice, amount, paidAt, u, notes));
+		Payment payment = payments.save(new Payment(nextReceiptNumber(paidAt), invoice, amount, paidAt, u, notes));
+		invoice.markPaid();
+		return payment;
 	}
 
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")

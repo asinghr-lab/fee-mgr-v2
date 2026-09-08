@@ -39,6 +39,13 @@ public final class BillingDtos {
 			String feeStructureName, LocalDate effectiveFrom, LocalDate effectiveTo) {
 	}
 
+	public record GradeFeeStructureRow(Long gradeId, String gradeName, Long feeStructureId, String feeStructureName,
+			LocalDate effectiveFrom) {
+	}
+
+	public record GradeFeeStructureChangeRequest(@NotNull Long feeStructureId) {
+	}
+
 	public record InvoiceItemResponse(Long id, String componentName, FeeFrequency frequency, BigDecimal originalAmount,
 			BigDecimal discountAmount, BigDecimal netAmount) {
 	}

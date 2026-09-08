@@ -114,11 +114,12 @@ public class BillingService {
 
 	private boolean alreadyInvoiced(StudentEnrollment e, AcademicYear y, FeeFrequency f, LocalDate billingMonth,
 			LocalDateTime now) {
+		List<InvoiceStatus> blockingStatuses = List.of(InvoiceStatus.DRAFT, InvoiceStatus.ISSUED, InvoiceStatus.PAID);
 		if (f == FeeFrequency.MONTHLY)
-			return invoices.countMonthlyPeriod(y.getId(), InvoiceStatus.ISSUED, e.getId(), billingMonth) > 0;
+			return invoices.countMonthlyPeriodByStatuses(y.getId(), e.getId(), blockingStatuses, billingMonth) > 0;
 		LocalDate generationMonth = now.toLocalDate().withDayOfMonth(1);
-		return invoices.existsByStudentEnrollmentIdAndAcademicYearIdAndStatusAndBillingMonthAndItems_Frequency(
-				e.getId(), y.getId(), InvoiceStatus.ISSUED, generationMonth, f);
+		return invoices.countByEnrollmentYearStatusesBillingMonthAndFrequency(e.getId(), y.getId(), blockingStatuses,
+				generationMonth, f) > 0;
 	}
 
 	private void validateMonth(AcademicYear y, LocalDate m) {
@@ -167,13 +168,26 @@ public class BillingService {
 		return invoices.findDetailedById(id).orElseThrow(() -> new IllegalArgumentException("Invoice not found."));
 	}
 
+
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional(readOnly = true)
+	public Optional<DiscountRequest> discountRequestForInvoice(Long invoiceId) {
+		return discounts.findLatestByInvoiceId(invoiceId);
+	}
+
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	@Transactional(readOnly = true)
+	public Optional<InvoiceCancellationRequest> latestCancellationRequestForInvoice(Long invoiceId) {
+		return cancellations.findLatestByInvoiceId(invoiceId).stream().findFirst();
+	}
+
 	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
 	@Transactional
 	public DiscountRequest requestDiscount(Long invoiceId, DiscountRequestForm form, String username) {
 		Invoice invoice = detail(invoiceId);
 		ensureIssued(invoice);
-		if (discounts.existsByInvoiceIdAndStatus(invoiceId, DiscountRequestStatus.DRAFT))
-			throw new IllegalStateException("An active discount request already exists for this invoice.");
+		if (discounts.existsByInvoiceId(invoiceId))
+			throw new IllegalStateException("A discount request has already been created for this invoice. Only one discount request is allowed during the invoice lifetime.");
 		InvoiceItem item = invoice.getItems().stream().filter(x -> x.getId().equals(form.invoiceItemId())).findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Invoice item does not belong to this invoice."));
 		if (form.requestedAmount().compareTo(item.getNetAmount()) > 0)
@@ -181,6 +195,7 @@ public class BillingService {
 		User user = users.findByUsername(username).orElseThrow();
 		DiscountRequest r = new DiscountRequest(invoice, user, form.reason().trim());
 		r.addItem(item, form.requestedAmount(), form.reason().trim());
+		invoice.markDraft();
 		return discounts.save(r);
 	}
 
@@ -192,6 +207,7 @@ public class BillingService {
 		if (cancellations.existsByInvoiceIdAndStatus(invoiceId, CancellationRequestStatus.DRAFT))
 			throw new IllegalStateException("An active cancellation request already exists for this invoice.");
 		User user = users.findByUsername(username).orElseThrow();
+		invoice.markDraft();
 		return cancellations.save(new InvoiceCancellationRequest(invoice, user, reason.trim()));
 	}
 
@@ -201,7 +217,10 @@ public class BillingService {
 		DiscountRequest r = discounts.findDetailedById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Discount request not found."));
 		User admin = users.findByUsername(username).orElseThrow();
+		if (r.getInvoice().getStatus() != InvoiceStatus.DRAFT)
+			throw new IllegalStateException("The invoice is not awaiting a discount decision.");
 		r.approve(admin);
+		r.getInvoice().issue();
 		for (var item : r.getItems())
 			discountFacts
 					.save(new Discount(r.getInvoice(), item.getInvoiceItem(), r, item.getRequestedAmount(), admin));
@@ -212,7 +231,10 @@ public class BillingService {
 	public void rejectDiscount(Long id, String username) {
 		DiscountRequest r = discounts.findDetailedById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Discount request not found."));
+		if (r.getInvoice().getStatus() != InvoiceStatus.DRAFT)
+			throw new IllegalStateException("The invoice is not awaiting a discount decision.");
 		r.reject(users.findByUsername(username).orElseThrow());
+		r.getInvoice().issue();
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
@@ -220,6 +242,8 @@ public class BillingService {
 	public void approveCancellation(Long id, String username) {
 		InvoiceCancellationRequest r = cancellations.findDetailedById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Cancellation request not found."));
+		if (r.getInvoice().getStatus() != InvoiceStatus.DRAFT)
+			throw new IllegalStateException("The invoice is not awaiting a cancellation decision.");
 		r.approve(users.findByUsername(username).orElseThrow());
 	}
 
@@ -228,7 +252,10 @@ public class BillingService {
 	public void rejectCancellation(Long id, String username) {
 		InvoiceCancellationRequest r = cancellations.findDetailedById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Cancellation request not found."));
+		if (r.getInvoice().getStatus() != InvoiceStatus.DRAFT)
+			throw new IllegalStateException("The invoice is not awaiting a cancellation decision.");
 		r.reject(users.findByUsername(username).orElseThrow());
+		r.getInvoice().issue();
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
