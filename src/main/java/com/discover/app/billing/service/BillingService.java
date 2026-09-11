@@ -69,34 +69,101 @@ public class BillingService {
 		GradeFeeStructure gfs = assignments.findForGradeId(enrollment.getGrade().getId()).stream().findFirst()
 				.orElse(null);
 		if (gfs == null)
+		{
+			System.out.print("No FeeStructure linked to Grade");
 			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
 					"No FeeStructure linked to Grade", null);
+		}	
 		FeeStructure structure = gfs.getFeeStructure();
 		if (structure.getStatus() != FeeStatus.ACTIVE)
+		{
+			System.out.print("Linked FeeStructure is INACTIVE");			
 			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
 					"Linked FeeStructure is INACTIVE", null);
+		}
 		LocalDateTime now = LocalDateTime.now();
 		List<InvoiceStatus> blocking = List.of(InvoiceStatus.DRAFT, InvoiceStatus.ISSUED, InvoiceStatus.PAID);
 		Invoice existingMonthly = invoices
 				.findBlockingMonthlyInvoice(year.getId(), enrollment.getId(), blocking, billingMonth).stream()
 				.findFirst().orElse(null);
-		if (existingMonthly != null)
-			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
-					"Invoice already exists for billing month with status " + existingMonthly.getStatus(),
+		if (existingMonthly != null) {
+			System.out.println("Monthly Invoice already exists for billing month with status " + existingMonthly.getStatus() +" "+
 					existingMonthly.getInvoiceNumber());
+		
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"Monthly Invoice already exists for billing month with status " + existingMonthly.getStatus(),
+					existingMonthly.getInvoiceNumber());
+		}
+		
+		List<FeeStructureItem> applicable = structure.getItems().stream()
+				.filter(item -> isApplicable(item.getFrequency(), year, billingMonth, now)).toList();
+		if (applicable.isEmpty()) {
+			System.out.print("No applicable fee components for the selected billing month");
+		
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"No applicable fee components for the selected billing month", null);
+		}
+		String number = nextInvoiceNumber(billingMonth.atStartOfDay());
+		Invoice invoice = new Invoice(number, enrollment, year, billingMonth, now,
+				calculateDueDate(applicable, billingMonth, now));
+		applicable.forEach(item -> invoice
+				.addItem(new InvoiceItem(item.getFeeComponent(), item.getFrequency(), item.getAmount())));
+		invoices.save(invoice);
+		return new InvoiceGenerationLog(studentName, admission, gradeName, "GENERATED",
+				"Invoice generated successfully", number);
+	}
+	
+	
+	private InvoiceGenerationLog generateForEnrollmentNonMonthly(StudentEnrollment enrollment, AcademicYear year,
+			LocalDate billingMonth) {
+		String studentName = enrollment.getStudent().getFullName();
+		String admission = enrollment.getStudent().getAdmissionNumber();
+		String gradeName = enrollment.getGrade().getName();
+		GradeFeeStructure gfs = assignments.findForGradeId(enrollment.getGrade().getId()).stream().findFirst()
+				.orElse(null);
+		if (gfs == null)
+		{
+			System.out.print("No FeeStructure linked to Grade");
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"No FeeStructure linked to Grade", null);
+		}	
+		FeeStructure structure = gfs.getFeeStructure();
+		if (structure.getStatus() != FeeStatus.ACTIVE)
+		{
+			System.out.print("Linked FeeStructure is INACTIVE");			
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"Linked FeeStructure is INACTIVE", null);
+		}
+		LocalDateTime now = LocalDateTime.now();
+		List<InvoiceStatus> blocking = List.of(InvoiceStatus.DRAFT, InvoiceStatus.ISSUED, InvoiceStatus.PAID);
+		Invoice existingMonthly = invoices
+				.findBlockingMonthlyInvoice(year.getId(), enrollment.getId(), blocking, billingMonth).stream()
+				.findFirst().orElse(null);
+		if (existingMonthly != null) {
+			System.out.print("Monthly Invoice already exists for billing month with status");
+		
+			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
+					"Monthly Invoice already exists for billing month with status " + existingMonthly.getStatus(),
+					existingMonthly.getInvoiceNumber());
+		}
 		LocalDate generationMonthStart = now.toLocalDate().withDayOfMonth(1);
 		LocalDate generationMonthEnd = generationMonthStart.plusMonths(1);
 		Invoice existingGenerated = invoices.findBlockingGeneratedInMonth(year.getId(), enrollment.getId(), blocking,
 				generationMonthStart.atStartOfDay(), generationMonthEnd.atStartOfDay()).stream().findFirst().orElse(null);
-		if (existingGenerated != null)
+		if (existingGenerated != null) {
+			System.out.print("Generic Invoice already generated in generation month with status");
 			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
-					"Invoice already generated in generation month with status " + existingGenerated.getStatus(),
+					"Generic Invoice already generated in generation month with status " + existingGenerated.getStatus(),
 					existingGenerated.getInvoiceNumber());
+		}
 		List<FeeStructureItem> applicable = structure.getItems().stream()
 				.filter(item -> isApplicable(item.getFrequency(), year, billingMonth, now)).toList();
-		if (applicable.isEmpty())
+		if (applicable.isEmpty()) {
+			System.out.print("No applicable fee components for the selected billing month");
+		
 			return new InvoiceGenerationLog(studentName, admission, gradeName, "SKIPPED",
 					"No applicable fee components for the selected billing month", null);
+		}
 		String number = nextInvoiceNumber(now);
 		Invoice invoice = new Invoice(number, enrollment, year, billingMonth, now,
 				calculateDueDate(applicable, billingMonth, now));
@@ -106,6 +173,7 @@ public class BillingService {
 		return new InvoiceGenerationLog(studentName, admission, gradeName, "GENERATED",
 				"Invoice generated successfully", number);
 	}
+
 
 	private boolean isApplicable(FeeFrequency f, AcademicYear y, LocalDate billingMonth, LocalDateTime now) {
 		int m = (f == FeeFrequency.MONTHLY ? billingMonth.getMonthValue() : now.getMonthValue());

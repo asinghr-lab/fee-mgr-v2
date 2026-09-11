@@ -2,6 +2,7 @@ package com.discover.app.school.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +35,8 @@ public class SchoolDataInitializer {
 			UserRepository userRepo) {
 		return args -> {
 
+			TimeUnit.SECONDS.sleep(4); 
+			
 			if (schoolRepo.findById((long) 1).isEmpty()) {
 				var school = new School("Discover International School", "Address of School, 246149, Kotdwara",
 						"9898221133", "abc@xyz.com");
@@ -78,16 +81,24 @@ public class SchoolDataInitializer {
 						studentRepo.save(student5);
 						studentRepo.save(student6);
 
-						var user = userRepo.findByUsername("staff").stream().findFirst().get();
-						// var user=new com.discover.app.identity.domain.User("staff","x",true);
+						var staff = userRepo.findByUsername("staff").stream().findFirst().get();
+						var admin = userRepo.findByUsername("admin").stream().findFirst().get();
 
-						var enrollment1 = new StudentEnrollment(student1, year, grade1, user, LocalDateTime.now());
-						var enrollment2 = new StudentEnrollment(student2, year, grade1, user, LocalDateTime.now());
-						var enrollment3 = new StudentEnrollment(student3, year, grade2, user, LocalDateTime.now());
-						var enrollment4 = new StudentEnrollment(student4, year, grade2, user, LocalDateTime.now());
-						var enrollment5 = new StudentEnrollment(student5, year, grade3, user, LocalDateTime.now());
-						var enrollment6 = new StudentEnrollment(student6, year, grade3, user, LocalDateTime.now());
+						var enrollment1 = new StudentEnrollment(student1, year, grade1, staff, LocalDateTime.now());
+						var enrollment2 = new StudentEnrollment(student2, year, grade1, staff, LocalDateTime.now());
+						var enrollment3 = new StudentEnrollment(student3, year, grade2, staff, LocalDateTime.now());
+						var enrollment4 = new StudentEnrollment(student4, year, grade2, staff, LocalDateTime.now());
+						var enrollment5 = new StudentEnrollment(student5, year, grade3, staff, LocalDateTime.now());
+						var enrollment6 = new StudentEnrollment(student6, year, grade3, staff, LocalDateTime.now());
 
+						enrollment1.approve(admin, LocalDateTime.now());
+						enrollment2.approve(admin, LocalDateTime.now());
+						enrollment3.approve(admin, LocalDateTime.now());
+						enrollment4.approve(admin, LocalDateTime.now());
+						enrollment5.approve(admin, LocalDateTime.now());
+						enrollment6.approve(admin, LocalDateTime.now());
+						
+						
 						enrollmentRepo.save(enrollment1);
 						enrollmentRepo.save(enrollment2);
 						enrollmentRepo.save(enrollment3);

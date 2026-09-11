@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/base}">
+
+<body>
+	<section layout:fragment="content">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<div>
+				<h1 class="page-title h3 mb-1">Q1-Grade-Report</h1>
+				<p class="text-muted mb-0">Grade: <b th:text="${report.gradeName}"></b> · Academic Year: <b th:text="${report.academicYear}"></b></p>
+			</div>
+			<a class="btn btn-sm btn-outline-secondary" th:href="@{/reporting/q1}"><i class="bi bi-arrow-left me-1"></i>Back</a>
+		</div>
+		<div class="table-responsive card">
+		<table class="table table-hover mb-0 align-middle text-nowrap">
+		<thead><tr><th>Student</th><th>April Collected</th><th>April Outstanding</th><th>May Collected</th><th>May Outstanding</th><th>June Collected</th><th>June Outstanding</th><th>Q1 Total Outstanding</th></tr></thead>
+		<tbody>
+		<tr th:each="r:${report.rows}">
+			<td><a th:href="@{/reporting/q1/student/{id}(id=${r.enrollmentId})}" th:text="${r.studentName}"></a></td>
+			<td th:text="${r.aprilCollected}"></td><td th:text="${r.aprilOutstanding}"></td><td th:text="${r.mayCollected}"></td><td th:text="${r.mayOutstanding}"></td><td th:text="${r.juneCollected}"></td><td th:text="${r.juneOutstanding}"></td><td th:text="${r.q1TotalOutstanding}"></td>
+		</tr>
+		<tr class="table-light fw-semibold"><td>Total</td><td th:text="${report.total.aprilCollected}"></td><td th:text="${report.total.aprilOutstanding}"></td><td th:text="${report.total.mayCollected}"></td><td th:text="${report.total.mayOutstanding}"></td><td th:text="${report.total.juneCollected}"></td><td th:text="${report.total.juneOutstanding}"></td><td th:text="${report.total.q1TotalOutstanding}"></td></tr>
+		</tbody>
+		</table>
+		</div>
+	</section>
+</body>
+</html>
