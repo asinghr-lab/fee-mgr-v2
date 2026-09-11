@@ -23,12 +23,15 @@ public class ReportingService {
 	private final AcademicYearRepository years;
 	private final GradeRepository grades;
 	private final StudentRepository students;
+	private final com.discover.app.school.service.SchoolService schoolService;
 
-	public ReportingService(ReportingRepository r, AcademicYearRepository y, GradeRepository g, StudentRepository s) {
+	public ReportingService(ReportingRepository r, AcademicYearRepository y, GradeRepository g, StudentRepository s,
+			com.discover.app.school.service.SchoolService schoolService) {
 		repo = r;
 		years = y;
 		grades = g;
 		students = s;
+		this.schoolService = schoolService;
 	}
 
 	@Transactional(readOnly = true)
@@ -185,6 +188,177 @@ public class ReportingService {
 		}
 		return new StudentReport(e.getId(), e.getStudent().getFullName(), e.getStudent().getAdmissionNumber(),
 				y.getName(), months, yi, yr, ya, yc, yi.subtract(ya).subtract(yc));
+	}
+
+	@Transactional(readOnly = true)
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	public Q1SchoolReport q1School() {
+		var y = year();
+		var invoiceData = q1InvoiceData(y);
+		Map<Long, Q1GradeAccumulator> byGrade = new LinkedHashMap<>();
+		for (var grade : grades.findAllByOrderByDisplayOrderAscNameAsc())
+			byGrade.put(grade.getId(), new Q1GradeAccumulator(grade.getName()));
+		for (var i : invoiceData.invoices()) {
+			var e = i.getStudentEnrollment();
+			var grade = e.getGrade();
+			var acc = byGrade.computeIfAbsent(grade.getId(), id -> new Q1GradeAccumulator(grade.getName()));
+			acc.add(i, invoiceData.paymentByInvoiceId().get(i.getId()));
+		}
+		List<Q1GradeRow> rows = new ArrayList<>();
+		for (var e : byGrade.entrySet())
+			rows.add(e.getValue().toRow(e.getKey()));
+		Q1AmountAccumulator total = new Q1AmountAccumulator();
+		rows.forEach(total::add);
+		return new Q1SchoolReport(schoolName(), y.getName(), rows, total.toRow());
+	}
+
+	@Transactional(readOnly = true)
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	public Q1GradeReport q1Grade(Long gradeId) {
+		var y = year();
+		var grade = grades.findById(gradeId).orElseThrow(() -> new IllegalArgumentException("Grade not found."));
+		var invoiceData = q1InvoiceData(y);
+		Map<Long, Q1StudentAccumulator> byStudent = new LinkedHashMap<>();
+		for (var i : invoiceData.invoices()) {
+			var e = i.getStudentEnrollment();
+			if (!e.getGrade().getId().equals(gradeId))
+				continue;
+			var student = e.getStudent();
+			var acc = byStudent.computeIfAbsent(e.getId(), id -> new Q1StudentAccumulator(
+					student.getId(), student.getFullName(), student.getAdmissionNumber()));
+			acc.add(i, invoiceData.paymentByInvoiceId().get(i.getId()));
+		}
+		List<Q1StudentRow> rows = new ArrayList<>();
+		for (var e : byStudent.entrySet())
+			rows.add(e.getValue().toRow(e.getKey()));
+		Q1AmountAccumulator total = new Q1AmountAccumulator();
+		rows.forEach(total::add);
+		return new Q1GradeReport(grade.getName(), y.getName(), rows, total.toRow());
+	}
+
+	@Transactional(readOnly = true)
+	@PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+	public Q1StudentReport q1Student(Long enrollmentId) {
+		var y = year();
+		var enrollment = repo.enrollments(y.getId(), EnrollmentStatus.APPROVED).stream()
+				.filter(e -> e.getId().equals(enrollmentId)).findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Student enrollment not found."));
+		var invoiceData = q1InvoiceData(y);
+		Q1StudentAccumulator acc = new Q1StudentAccumulator(enrollment.getStudent().getId(),
+				enrollment.getStudent().getFullName(), enrollment.getStudent().getAdmissionNumber());
+		for (var i : invoiceData.invoices()) {
+			if (i.getStudentEnrollment().getId().equals(enrollmentId))
+				acc.add(i, invoiceData.paymentByInvoiceId().get(i.getId()));
+		}
+		return new Q1StudentReport(enrollment.getStudent().getFullName(), enrollment.getStudent().getAdmissionNumber(),
+				enrollment.getGrade().getId(), enrollment.getGrade().getName(), y.getName(), acc.toAmountRow());
+	}
+
+	private Q1InvoiceData q1InvoiceData(AcademicYear y) {
+		var start = LocalDate.of(y.getStartDate().getYear(), 4, 1);
+		var april = start;
+		var may = start.plusMonths(1);
+		var june = start.plusMonths(2);
+		var invoices = repo.invoices(y.getId()).stream()
+				.filter(i -> i.getStudentEnrollment().getStatus() == EnrollmentStatus.APPROVED)
+				.filter(this::isQ1Invoice)
+				.filter(i -> {
+					LocalDate bucket = invoiceMonth(i);
+					return bucket.equals(april) || bucket.equals(may) || bucket.equals(june);
+				})
+				.toList();
+		Map<Long, BigDecimal> payments = new HashMap<>();
+		for (var p : repo.payments(y.getId(), PaymentStatus.RECORDED)) {
+			var invoice = p.getInvoice();
+			if (invoice.getStatus() == InvoiceStatus.PAID && isQ1Invoice(invoice))
+				payments.put(invoice.getId(), p.getAmount());
+		}
+		return new Q1InvoiceData(invoices, payments);
+	}
+
+	private boolean isQ1Invoice(Invoice i) {
+		return i.getStatus() == InvoiceStatus.ISSUED || i.getStatus() == InvoiceStatus.PAID;
+	}
+
+	private LocalDate invoiceMonth(Invoice i) {
+		return i.getBillingMonth().withDayOfMonth(1);
+	}
+
+	private String schoolName() {
+		var school = schoolService.getSchool();
+		return school == null ? "" : school.getName();
+	}
+
+	private record Q1InvoiceData(List<Invoice> invoices, Map<Long, BigDecimal> paymentByInvoiceId) {
+	}
+
+	private static final class Q1GradeAccumulator {
+		private final String name;
+		private final Q1AmountAccumulator amounts = new Q1AmountAccumulator();
+
+		private Q1GradeAccumulator(String name) { this.name = name; }
+
+		private void add(Invoice invoice, BigDecimal payment) { amounts.add(invoice, payment); }
+
+		private Q1GradeRow toRow(Long id) {
+			var a = amounts.toRow();
+			return new Q1GradeRow(id, name, a.aprilCollected(), a.aprilOutstanding(), a.mayCollected(),
+					a.mayOutstanding(), a.juneCollected(), a.juneOutstanding(), a.q1TotalOutstanding());
+		}
+	}
+
+	private static final class Q1StudentAccumulator {
+		private final Long studentId;
+		private final String name;
+		private final String admissionNumber;
+		private final Q1AmountAccumulator amounts = new Q1AmountAccumulator();
+
+		private Q1StudentAccumulator(Long studentId, String name, String admissionNumber) {
+			this.studentId = studentId; this.name = name; this.admissionNumber = admissionNumber;
+		}
+
+		private void add(Invoice invoice, BigDecimal payment) { amounts.add(invoice, payment); }
+
+		private Q1StudentRow toRow(Long enrollmentId) {
+			var a = amounts.toRow();
+			return new Q1StudentRow(enrollmentId, studentId, name, admissionNumber, a.aprilCollected(),
+					a.aprilOutstanding(), a.mayCollected(), a.mayOutstanding(), a.juneCollected(), a.juneOutstanding(),
+					a.q1TotalOutstanding());
+		}
+
+		private Q1AmountRow toAmountRow() { return amounts.toRow(); }
+	}
+
+	private static final class Q1AmountAccumulator {
+		private BigDecimal aprilCollected = BigDecimal.ZERO, aprilOutstanding = BigDecimal.ZERO;
+		private BigDecimal mayCollected = BigDecimal.ZERO, mayOutstanding = BigDecimal.ZERO;
+		private BigDecimal juneCollected = BigDecimal.ZERO, juneOutstanding = BigDecimal.ZERO;
+
+		private void add(Invoice invoice, BigDecimal payment) {
+			BigDecimal collected = invoice.getStatus() == InvoiceStatus.PAID && payment != null ? payment : BigDecimal.ZERO;
+			BigDecimal outstanding = invoice.getNetAmount().subtract(collected);
+			LocalDate month = invoice.getBillingMonth().withDayOfMonth(1);
+			if (month.getMonthValue() == 4) { aprilCollected = aprilCollected.add(collected); aprilOutstanding = aprilOutstanding.add(outstanding); }
+			else if (month.getMonthValue() == 5) { mayCollected = mayCollected.add(collected); mayOutstanding = mayOutstanding.add(outstanding); }
+			else if (month.getMonthValue() == 6) { juneCollected = juneCollected.add(collected); juneOutstanding = juneOutstanding.add(outstanding); }
+		}
+
+		private void add(Q1GradeRow row) {
+			aprilCollected = aprilCollected.add(row.aprilCollected()); aprilOutstanding = aprilOutstanding.add(row.aprilOutstanding());
+			mayCollected = mayCollected.add(row.mayCollected()); mayOutstanding = mayOutstanding.add(row.mayOutstanding());
+			juneCollected = juneCollected.add(row.juneCollected()); juneOutstanding = juneOutstanding.add(row.juneOutstanding());
+		}
+
+		private void add(Q1StudentRow row) {
+			aprilCollected = aprilCollected.add(row.aprilCollected()); aprilOutstanding = aprilOutstanding.add(row.aprilOutstanding());
+			mayCollected = mayCollected.add(row.mayCollected()); mayOutstanding = mayOutstanding.add(row.mayOutstanding());
+			juneCollected = juneCollected.add(row.juneCollected()); juneOutstanding = juneOutstanding.add(row.juneOutstanding());
+		}
+
+		private Q1AmountRow toRow() {
+			return new Q1AmountRow(aprilCollected, aprilOutstanding, mayCollected, mayOutstanding, juneCollected, juneOutstanding,
+					aprilOutstanding.add(mayOutstanding).add(juneOutstanding));
+		}
 	}
 
 	@Transactional(readOnly = true)

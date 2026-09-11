@@ -54,4 +54,29 @@ public final class ReportingDtos {
 	public record PromotionRow(Long studentId, String studentName, String admissionNumber, String fromGrade,
 			String toGrade) {
 	}
+
+	public record Q1AmountRow(BigDecimal aprilCollected, BigDecimal aprilOutstanding, BigDecimal mayCollected,
+			BigDecimal mayOutstanding, BigDecimal juneCollected, BigDecimal juneOutstanding,
+			BigDecimal q1TotalOutstanding) {
+	}
+
+	public record Q1GradeRow(Long gradeId, String gradeName, BigDecimal aprilCollected, BigDecimal aprilOutstanding,
+			BigDecimal mayCollected, BigDecimal mayOutstanding, BigDecimal juneCollected, BigDecimal juneOutstanding,
+			BigDecimal q1TotalOutstanding) {
+	}
+
+	public record Q1StudentRow(Long enrollmentId, Long studentId, String studentName, String admissionNumber,
+			BigDecimal aprilCollected, BigDecimal aprilOutstanding, BigDecimal mayCollected, BigDecimal mayOutstanding,
+			BigDecimal juneCollected, BigDecimal juneOutstanding, BigDecimal q1TotalOutstanding) {
+	}
+
+	public record Q1SchoolReport(String schoolName, String academicYear, List<Q1GradeRow> rows, Q1AmountRow total) {
+	}
+
+	public record Q1GradeReport(String gradeName, String academicYear, List<Q1StudentRow> rows, Q1AmountRow total) {
+	}
+
+	public record Q1StudentReport(String studentName, String admissionNumber, Long gradeId, String gradeName, String academicYear,
+			Q1AmountRow amounts) {
+	}
 }

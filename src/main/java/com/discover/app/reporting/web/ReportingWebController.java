@@ -57,6 +57,24 @@ public class ReportingWebController {
 		return "reporting/student";
 	}
 
+	@GetMapping("/q1")
+	public String q1School(Model m) {
+		m.addAttribute("report", s.q1School());
+		return "reporting/q1-school";
+	}
+
+	@GetMapping("/q1/grade/{gradeId}")
+	public String q1Grade(@PathVariable Long gradeId, Model m) {
+		m.addAttribute("report", s.q1Grade(gradeId));
+		return "reporting/q1-grade";
+	}
+
+	@GetMapping("/q1/student/{enrollmentId}")
+	public String q1Student(@PathVariable Long enrollmentId, Model m) {
+		m.addAttribute("report", s.q1Student(enrollmentId));
+		return "reporting/q1-student";
+	}
+
 	@GetMapping("/admissions/new")
 	public String newAdmissions(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
 			Model m) {
